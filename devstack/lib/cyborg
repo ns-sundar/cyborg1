@@ -66,7 +66,7 @@ fi
 function install_cyborg {
     # make sure all needed service were enabled
     local req_services="key"
-    req_services+=" nova glance neutron"
+    req_services+=" nova glance"
     for srv in $req_services; do
         if ! is_service_enabled "$srv"; then
             die $LINENO "$srv should be enabled for Cyborg."

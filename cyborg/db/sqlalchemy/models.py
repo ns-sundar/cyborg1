@@ -66,65 +66,107 @@ class CyborgBase(models.TimestampMixin, models.ModelBase):
 
 Base = declarative_base(cls=CyborgBase)
 
+class Device(Base):
+    """Represents physical hardware, such as a PCI card.
+       It contains one or more Deployables, one or more
+       Control Path interfaces, and one or more attach handles.
+    """
+    __tablename__ = 'devices'
 
-class Accelerator(Base):
-    """Represents the accelerators."""
-
-    __tablename__ = 'accelerators'
-    __table_args__ = (
-        schema.UniqueConstraint('uuid', name='uniq_accelerators0uuid'),
-        table_args()
-    )
-
-    id = Column(Integer, primary_key=True)
-    uuid = Column(String(36), nullable=False)
-    name = Column(String(255), nullable=False)
-    description = Column(String(255), nullable=True)
-    project_id = Column(String(36), nullable=True)
-    user_id = Column(String(36), nullable=True)
-    device_type = Column(String(255), nullable=False)
-    acc_type = Column(String(255), nullable=True)
-    acc_capability = Column(String(255), nullable=True)
-    vendor_id = Column(String(255), nullable=False)
-    product_id = Column(String(255), nullable=False)
-    remotable = Column(Integer, nullable=False)
-
+    id = Column(Integer, primary_key=True, unique=True)
+    # HACK: type should be an enum.
+    type = Column(String(30), nullable=False) # e.g. "GPU","FPGA".
+    vendor = Column(String(255), nullable=False)
+    model = Column(String(255), nullable=False)
+    hostname = Column(String(255), nullable=False)
+    # board-level info etc. will go here.
 
 class Deployable(Base):
-    """Represents the deployables."""
+    """Equivalent of a Resource Provider. Contains one or more resources."""
 
     __tablename__ = 'deployables'
     __table_args__ = (
         schema.UniqueConstraint('uuid', name='uniq_deployables0uuid'),
-        Index('deployables_parent_uuid_idx', 'parent_uuid'),
-        Index('deployables_root_uuid_idx', 'root_uuid'),
-        Index('deployables_accelerator_id_idx', 'accelerator_id'),
         table_args()
     )
 
-    id = Column(Integer, primary_key=True)
-    uuid = Column(String(36), nullable=False)
-    name = Column(String(255), nullable=False)
+    id = Column(Integer, primary_key=True, unique=True)
+    uuid = Column(String(36), unique=True, nullable=False)
     parent_uuid = Column(String(36),
                          ForeignKey('deployables.uuid'), nullable=True)
     root_uuid = Column(String(36),
                        ForeignKey('deployables.uuid'), nullable=True)
-    address = Column(String(255), nullable=False)
-    host = Column(String(255), nullable=False)
-    board = Column(String(255), nullable=False)
-    vendor = Column(String(255), nullable=False)
-    version = Column(String(255), nullable=False)
-    type = Column(String(255), nullable=False)
-    interface_type = Column(String(255), nullable=False)
-    assignable = Column(Boolean, nullable=False)
-    instance_uuid = Column(String(36), nullable=True)
-    availability = Column(String(255), nullable=False)
-    accelerator_id = Column(Integer,
-                            ForeignKey('accelerators.id', ondelete="CASCADE"),
-                            nullable=False)
 
+    device_id = Column(Integer,
+                    ForeignKey('devices.id', ondelete="CASCADE"),
+                    nullable=False)
+    num_accelerators = Column(Integer)
+
+class ControlPathID(Base):
+    """ An identifier for a control path interface to the device.
+        E.g. PCI PF. Aka Device ID. A device may have more than one
+        of these, in which case the Cyborg driver needs to know how
+        to handle these.
+    """
+    __tablename__ = 'controlpath_id'
+
+    id = Column(Integer, primary_key=True, unique=True)
+    type_name = Column(String(30), nullable=False)
+    device_id = Column(Integer,
+                    ForeignKey('devices.id', ondelete="CASCADE"),
+                    nullable=False)
+
+    __mapper_args__ = {
+        'polymorphic_identity':'controlpath_id',
+        'polymorphic_on': type_name
+    }
+
+class ControlPathID_PCI(ControlPathID):
+    """ Control Path Interface ID as a PCI BDF
+    """
+    __tablename__ = 'controlpath_id_pci'
+    __mapper_args__ = {
+        'polymorphic_identity':'controlpath_id_pci',
+    }
+
+    id = Column(Integer, ForeignKey('controlpath_id.id'), primary_key=True)
+    domain = Column(Integer, nullable=False)
+    bus    = Column(Integer, nullable=False)
+    device = Column(Integer, nullable=False)
+    function = Column(Integer, nullable=False)
+
+class AttachHandle(Base):
+    """ An identifer for an object by which an accelerator is
+        attached to an instance (VM). E.g. PCI PF.
+    """
+    __tablename__ = 'attach_handle'
+
+    id = Column(Integer, primary_key=True, unique=True)
+    type_name = Column(String(255), nullable=False)
+    device_id = Column(Integer,
+                    ForeignKey('devices.id', ondelete="CASCADE"),
+                    nullable=False)
+
+    __mapper_args__ = {
+        'polymorphic_identity':'attach_handle',
+        'polymorphic_on': type_name
+    }
+
+class AttachHandle_PCI(AttachHandle):
+    """ Attach Handle as a PCI BDF """
+    __tablename__ = 'attach_handle_pci'
+    __mapper_args__ = {
+        'polymorphic_identity':'attach_handle_pci',
+    }
+
+    id = Column(Integer, ForeignKey('attach_handle.id'), primary_key=True)
+    domain = Column(Integer, nullable=False)
+    bus    = Column(Integer, nullable=False)
+    device = Column(Integer, nullable=False)
+    function = Column(Integer, nullable=False)
 
 class Attribute(Base):
+    """ Attributes are properties of Deployables in key-value pair format."""
     __tablename__ = 'attributes'
     __table_args__ = (
         schema.UniqueConstraint('uuid', name='uniq_attributes0uuid'),
@@ -132,14 +174,13 @@ class Attribute(Base):
         table_args()
     )
 
-    id = Column(Integer, primary_key=True)
-    uuid = Column(String(36), nullable=False)
+    id = Column(Integer, primary_key=True, unique=True)
+    uuid = Column(String(36), unique=True, nullable=False)
     deployable_id = Column(Integer,
                            ForeignKey('deployables.id', ondelete="CASCADE"),
                            nullable=False)
     key = Column(Text, nullable=False)
     value = Column(Text, nullable=False)
-
 
 class QuotaUsage(Base):
     """Represents the current usage for a given resource."""
@@ -163,7 +204,6 @@ class QuotaUsage(Base):
         return self.in_use + self.reserved
 
     until_refresh = Column(Integer)
-
 
 class Reservation(Base):
     """Represents a resource reservation for quotas."""
@@ -190,3 +230,43 @@ class Reservation(Base):
         "QuotaUsage",
         foreign_keys=usage_id,
         primaryjoin=usage_id == QuotaUsage.id)
+
+class DeviceProfile(Base):
+    """ A device profile is a set of requirements for accelerators.
+        See https://review.openstack.org/#/c/602978/
+    """
+    __tablename__ = 'device_profiles'
+
+    id = Column(Integer, primary_key=True, unique=True, nullable=False)
+    name=Column(String(255), nullable=False,unique=True)
+    json = Column(String(1000))
+
+# NOTE on ARQs and ExtARQs
+# An ExtARQ is a Cyborg object that wraps an ARQ with Cyborg-private fields.
+# It corresponds 1:1 with ARQ. They are represented as db tables and also
+# as OVos. In both cases, we use composition rather than inheritance, i.e.,
+# the ExtARQ object includes an ARQ as a field rather than extend it as a
+# class.
+
+class ARQ(Base):
+    """ Accelerator Request. """
+
+    __tablename__ = 'arq'
+
+    id = Column(Integer, primary_key=True, unique=True, nullable=False)
+    uuid = Column(String(36), unique=True, nullable=False)
+    state = Column(String(36), nullable=False) # HACK: shd be an enum
+    device_profile_id = Column(Integer, ForeignKey('device_profiles.id'),
+                               nullable=False)
+    host_name = Column(String(255))
+    device_rp_uuid = Column(String(255))
+    instance_uuid = Column(String(255))
+
+class ExtARQ(Base):
+    """ Cyborg object that wraps an ARQ with Cyborg-private fields.
+        See note above.
+    """
+
+    __tablename__ = 'extarq'
+    id = Column(Integer, primary_key=True, unique=True, nullable=False)
+    arq_uuid = Column(Integer, ForeignKey('arq.uuid'), nullable=False)

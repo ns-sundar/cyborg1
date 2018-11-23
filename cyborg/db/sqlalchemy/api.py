@@ -128,6 +128,7 @@ class Connection(api.Connection):
         pass
 
     def accelerator_create(self, context, values):
+        raise NotImplementedError() # HACK
         if not values.get('uuid'):
             values['uuid'] = uuidutils.generate_uuid()
 
@@ -143,6 +144,7 @@ class Connection(api.Connection):
             return accelerator
 
     def accelerator_get(self, context, uuid):
+        raise NotImplementedError() # HACK
         query = model_query(
             context,
             models.Accelerator).filter_by(uuid=uuid)
@@ -153,12 +155,14 @@ class Connection(api.Connection):
 
     def accelerator_list(self, context, limit, marker, sort_key, sort_dir,
                          project_only):
+        raise NotImplementedError() # HACK
         query = model_query(context, models.Accelerator,
                             project_only=project_only)
         return _paginate_query(context, models.Accelerator, limit, marker,
                                sort_key, sort_dir, query)
 
     def accelerator_update(self, context, uuid, values):
+        raise NotImplementedError() # HACK
         if 'uuid' in values:
             msg = _("Cannot overwrite UUID for an existing Accelerator.")
             raise exception.InvalidParameterValue(err=msg)
@@ -184,6 +188,7 @@ class Connection(api.Connection):
 
     @oslo_db_api.retry_on_deadlock
     def accelerator_delete(self, context, uuid):
+        raise NotImplementedError() # HACK
         with _session_for_write():
             query = model_query(context, models.Accelerator)
             query = add_identity_filter(query, uuid)
@@ -192,6 +197,7 @@ class Connection(api.Connection):
                 raise exception.AcceleratorNotFound(uuid=uuid)
 
     def deployable_create(self, context, values):
+        raise NotImplementedError() # HACK
         if not values.get('uuid'):
             values['uuid'] = uuidutils.generate_uuid()
         if values.get('id'):
@@ -208,6 +214,7 @@ class Connection(api.Connection):
             return deployable
 
     def deployable_get(self, context, uuid):
+        raise NotImplementedError() # HACK
         query = model_query(
             context,
             models.Deployable).filter_by(uuid=uuid)
@@ -217,16 +224,19 @@ class Connection(api.Connection):
             raise exception.DeployableNotFound(uuid=uuid)
 
     def deployable_get_by_host(self, context, host):
+        raise NotImplementedError() # HACK
         query = model_query(
             context,
             models.Deployable).filter_by(host=host)
         return query.all()
 
     def deployable_list(self, context):
+        raise NotImplementedError() # HACK
         query = model_query(context, models.Deployable)
         return query.all()
 
     def deployable_update(self, context, uuid, values):
+        raise NotImplementedError() # HACK
         if 'uuid' in values:
             msg = _("Cannot overwrite UUID for an existing Deployable.")
             raise exception.InvalidParameterValue(err=msg)
@@ -253,6 +263,7 @@ class Connection(api.Connection):
 
     @oslo_db_api.retry_on_deadlock
     def deployable_delete(self, context, uuid):
+        raise NotImplementedError() # HACK
         with _session_for_write():
             query = model_query(context, models.Deployable)
             query = add_identity_filter(query, uuid)
@@ -263,6 +274,7 @@ class Connection(api.Connection):
 
     def deployable_get_by_filters_with_attributes(self, context,
                                                   filters):
+        raise NotImplementedError() # HACK
 
         exact_match_filter_names = ['uuid', 'name',
                                     'parent_uuid', 'root_uuid',
@@ -302,6 +314,7 @@ class Connection(api.Connection):
         the sort_key. See deployable_get_by_filters_sort for
         more information.
         """
+        raise NotImplementedError() # HACK
         return self.deployable_get_by_filters_sort(context, filters,
                                                    limit=limit, marker=marker,
                                                    join_columns=join_columns,
@@ -399,6 +412,7 @@ class Connection(api.Connection):
         keys. Deleted deployables will be returned by default, unless
         there's a filter that says otherwise.
         """
+        raise NotImplementedError() # HACK
 
         if limit == 0:
             return []
@@ -424,6 +438,7 @@ class Connection(api.Connection):
                                sort_key, sort_dir, query_prefix)
 
     def attribute_create(self, context, values):
+        raise NotImplementedError() # HACK
         if not values.get('uuid'):
             values['uuid'] = uuidutils.generate_uuid()
         if values.get('id'):
@@ -441,6 +456,7 @@ class Connection(api.Connection):
             return attribute
 
     def attribute_get(self, context, uuid):
+        raise NotImplementedError() # HACK
         query = model_query(
             context,
             models.Attribute).filter_by(uuid=uuid)
@@ -450,12 +466,14 @@ class Connection(api.Connection):
             raise exception.AttributeNotFound(uuid=uuid)
 
     def attribute_get_by_deployable_id(self, context, deployable_id):
+        raise NotImplementedError() # HACK
         query = model_query(
             context,
             models.Attribute).filter_by(deployable_id=deployable_id)
         return query.all()
 
     def attribute_get_by_filter(self, context, filters):
+        raise NotImplementedError() # HACK
         """Return attributes that matches the filters
         """
         query_prefix = model_query(context, models.Attribute)
@@ -483,6 +501,7 @@ class Connection(api.Connection):
         return query
 
     def attribute_update(self, context, uuid, key, value):
+        raise NotImplementedError() # HACK
         return self._do_update_attribute(context, uuid, key, value)
 
     @oslo_db_api.retry_on_deadlock
@@ -500,6 +519,7 @@ class Connection(api.Connection):
         return ref
 
     def attribute_delete(self, context, uuid):
+        raise NotImplementedError() # HACK
         with _session_for_write():
             query = model_query(context, models.Attribute)
             query = add_identity_filter(query, uuid)
@@ -730,3 +750,57 @@ class Connection(api.Connection):
                 result_dirs.append(default_dir_value)
 
         return result_keys, result_dirs
+
+    def device_profile_create(self, context, values):
+        if not values.get('uuid'):
+            values['uuid'] = uuidutils.generate_uuid()
+
+        devprof = models.DeviceProfile()
+        devprof.update(values)
+
+        with _session_for_write() as session:
+            try:
+                session.add(devprof)
+                session.flush()
+            except db_exc.DBDuplicateEntry:
+                raise exception.StandardError # HACK use specific exception
+            return devprof
+
+    def device_profile_get(self, context, name):
+        query = model_query(context,
+                   models.DeviceProfile).filter_by(name=name)
+        try:
+            return query.one()
+        except NoResultFound:
+            raise exception.StandardError # HACK use specific exception
+
+    def device_profile_list(self, context):
+        query = model_query(context, models.DeviceProfile)
+        return query.all()
+
+    def device_profile_update(self, context, name, values):
+        try:
+            return self._do_update_device_profile(context, name, values)
+        except db_exc.DBDuplicateEntry as e:
+            raise exception.StandardError # HACK use specific exception
+
+    @oslo_db_api.retry_on_deadlock
+    def _do_update_device_profile(self, context, name, values):
+        with _session_for_write():
+            query = model_query(context, models.DeviceProfile)
+            query = add_identity_filter(query, name)
+            try:
+                ref = query.with_lockmode('update').one()
+            except NoResultFound:
+                raise exception.StandardError # HACK use specific exception
+
+            ref.update(values)
+        return ref
+
+    def device_profile_delete(self, context, name):
+        with _session_for_write():
+            query = model_query(context, models.DeviceProfile)
+            query = add_identity_filter(query, name)
+            count = query.delete()
+            if count != 1:
+                raise exception.StandardError # HACK use specific exception

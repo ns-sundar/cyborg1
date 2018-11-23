@@ -238,7 +238,8 @@ class DeviceProfile(Base):
     __tablename__ = 'device_profiles'
 
     id = Column(Integer, primary_key=True, unique=True, nullable=False)
-    name=Column(String(255), nullable=False,unique=True)
+    uuid = Column(String(36), nullable=False, unique=True)
+    name=Column(String(255), nullable=False, unique=True)
     json = Column(String(1000))
 
 # NOTE on ARQs and ExtARQs

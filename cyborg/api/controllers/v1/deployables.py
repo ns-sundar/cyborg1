@@ -19,6 +19,8 @@ from six.moves import http_client
 import wsme
 from wsme import types as wtypes
 
+from oslo_log import log
+
 from cyborg.api.controllers import base
 from cyborg.api.controllers import link
 from cyborg.api.controllers.v1 import types
@@ -30,6 +32,7 @@ from cyborg import objects
 from cyborg.quota import QUOTAS
 from cyborg.agent.rpcapi import AgentAPI
 
+MYLOG = log.getLogger(__name__)
 
 class Deployable(base.APIBase):
     """API representation of a deployable.
@@ -150,6 +153,7 @@ class DeployablesController(base.CyborgController):
         :param uuid: The uuid of the target deployable.
         :param program_info: JSON string containing what to program.
         """
+        raise NotImplementedError() # HACK
 
         image_uuid = program_info[0]['value'][0]['image_uuid']
         agent_api = AgentAPI()
@@ -170,6 +174,7 @@ class DeployablesController(base.CyborgController):
 
         :param dep: a deployable within the request body.
         """
+        raise NotImplementedError() # HACK
         context = pecan.request.context
         obj_dep = objects.Deployable(context, **dep)
         new_dep = pecan.request.conductor_api.deployable_create(context,
@@ -185,6 +190,7 @@ class DeployablesController(base.CyborgController):
 
         :param uuid: UUID of a deployable.
         """
+        raise NotImplementedError() # HACK
 
         obj_dep = objects.Deployable.get(pecan.request.context, uuid)
         return Deployable.convert_with_links(obj_dep)
@@ -197,6 +203,8 @@ class DeployablesController(base.CyborgController):
     def get_all(self, limit=None, marker=None, sort_key='id', sort_dir='asc',
                 filters=None):
         """Retrieve a list of deployables."""
+        raise NotImplementedError() # HACK
+        MYLOG.warning("Deployables get_all called.\n")
         filters_dict = {}
         self._generate_filters(limit, sort_key, sort_dir, filters_dict)
         if filters:
@@ -231,6 +239,7 @@ class DeployablesController(base.CyborgController):
         :param uuid: UUID of a deployable.
         :param patch: a json PATCH document to apply to this deployable.
         """
+        raise NotImplementedError() # HACK
         context = pecan.request.context
         reservations = None
 
@@ -278,6 +287,7 @@ class DeployablesController(base.CyborgController):
 
         :param uuid: UUID of a deployable.
         """
+        raise NotImplementedError() # HACK
         context = pecan.request.context
         obj_dep = objects.Deployable.get(context, uuid)
         pecan.request.conductor_api.deployable_delete(context, obj_dep)

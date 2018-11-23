@@ -63,11 +63,13 @@ class Deployable(base.CyborgObject, object_base.VersionedObjectDictCompat):
     }
 
     def _get_parent_root_uuid(self):
+        raise NotImplementedError() # HACK
         obj_dep = Deployable.get(None, self.parent_uuid)
         return obj_dep.root_uuid
 
     def create(self, context):
         """Create a Deployable record in the DB."""
+        raise NotImplementedError() # HACK
         if 'uuid' not in self:
             raise exception.ObjectActionError(action='create',
                                               reason='uuid is required')
@@ -86,6 +88,7 @@ class Deployable(base.CyborgObject, object_base.VersionedObjectDictCompat):
     @classmethod
     def get(cls, context, uuid):
         """Find a DB Deployable and return an Obj Deployable."""
+        raise NotImplementedError() # HACK
         db_dep = cls.dbapi.deployable_get(context, uuid)
         obj_dep = cls._from_db_object(cls(context), db_dep)
         # retrieve all the attrobutes for this deployable
@@ -98,6 +101,7 @@ class Deployable(base.CyborgObject, object_base.VersionedObjectDictCompat):
     @classmethod
     def get_by_host(cls, context, host):
         """Get a Deployable by host."""
+        raise NotImplementedError() # HACK
         db_deps = cls.dbapi.deployable_get_by_host(context, host)
         obj_dpl_list = cls._from_db_object_list(db_deps, context)
         for obj_dpl in obj_dpl_list:
@@ -110,6 +114,7 @@ class Deployable(base.CyborgObject, object_base.VersionedObjectDictCompat):
     @classmethod
     def list(cls, context, filters={}):
         """Return a list of Deployable objects."""
+        raise NotImplementedError() # HACK
         if filters:
             sort_dir = filters.pop('sort_dir', 'desc')
             sort_key = filters.pop('sort_key', 'create_at')
@@ -132,6 +137,7 @@ class Deployable(base.CyborgObject, object_base.VersionedObjectDictCompat):
 
     def save(self, context):
         """Update a Deployable record in the DB."""
+        raise NotImplementedError() # HACK
         updates = self.obj_get_changes()
         db_dep = self.dbapi.deployable_update(context, self.uuid, updates)
         self._from_db_object(self, db_dep)
@@ -142,6 +148,7 @@ class Deployable(base.CyborgObject, object_base.VersionedObjectDictCompat):
 
     def destroy(self, context):
         """Delete a Deployable from the DB."""
+        raise NotImplementedError() # HACK
         del self.attributes_list[:]
         self.dbapi.deployable_delete(context, self.uuid)
         self.obj_reset_changes()
@@ -151,6 +158,7 @@ class Deployable(base.CyborgObject, object_base.VersionedObjectDictCompat):
         If the attribute already exists, it will update the value,
         otherwise, the vf will be appended to the list
         """
+        raise NotImplementedError() # HACK
 
         for exist_attr in self.attributes_list:
             if key == exist_attr.key:
@@ -173,6 +181,7 @@ class Deployable(base.CyborgObject, object_base.VersionedObjectDictCompat):
         """remove an attribute from the attributes_list
         if the attribute does not exist, ignore it
         """
+        raise NotImplementedError() # HACK
 
         idx = 0
         for exist_attribute in self.attributes_list:
@@ -186,6 +195,7 @@ class Deployable(base.CyborgObject, object_base.VersionedObjectDictCompat):
     @classmethod
     def get_by_filter(cls, context,
                       filters):
+        raise NotImplementedError() # HACK
         obj_dpl_list = []
         db_dpl_list = cls.dbapi.deployable_get_by_filters_with_attributes(
             context,
@@ -210,6 +220,7 @@ class Deployable(base.CyborgObject, object_base.VersionedObjectDictCompat):
         :param db_obj: A DB model of the object
         :return: The object of the class with the database entity added
         """
+        raise NotImplementedError() # HACK
         obj = base.CyborgObject._from_db_object(obj, db_obj)
         obj.attributes_list = []
 

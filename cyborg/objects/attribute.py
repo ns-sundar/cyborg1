@@ -42,6 +42,7 @@ class Attribute(base.CyborgObject, object_base.VersionedObjectDictCompat):
 
     def create(self, context):
         """Create a attribute record in the DB."""
+        raise NotImplementedError() # HACK
         if self.deployable_id is None:
             raise exception.AttributeInvalid()
 
@@ -53,6 +54,7 @@ class Attribute(base.CyborgObject, object_base.VersionedObjectDictCompat):
     @classmethod
     def get(cls, context, uuid):
         """Find a DB attribute and return an Obj Deployable."""
+        raise NotImplementedError() # HACK
         db_attr = cls.dbapi.attribute_get(context, uuid)
         obj_attr = cls._from_db_object(cls(context), db_attr)
         return obj_attr
@@ -60,6 +62,7 @@ class Attribute(base.CyborgObject, object_base.VersionedObjectDictCompat):
     @classmethod
     def get_by_deployable_id(cls, context, deployable_id):
         """Get a attribute by deployable_id"""
+        raise NotImplementedError() # HACK
         db_attr = cls.dbapi.attribute_get_by_deployable_id(context,
                                                            deployable_id)
         return cls._from_db_object_list(db_attr, context)
@@ -67,11 +70,13 @@ class Attribute(base.CyborgObject, object_base.VersionedObjectDictCompat):
     @classmethod
     def get_by_filter(cls, context, filters):
         """Get a attribute by specified filters"""
+        raise NotImplementedError() # HACK
         db_attr = cls.dbapi.attribute_get_by_filter(context, filters)
         return cls._from_db_object_list(db_attr, context)
 
     def save(self, context):
         """Update a attribute record in the DB."""
+        raise NotImplementedError() # HACK
         updates = self.obj_get_changes()
         db_attr = self.dbapi.attribute_update(context,
                                               self.uuid,
@@ -81,9 +86,11 @@ class Attribute(base.CyborgObject, object_base.VersionedObjectDictCompat):
 
     def destroy(self, context):
         """Delete a attribute from the DB."""
+        raise NotImplementedError() # HACK
         self.dbapi.attribute_delete(context, self.uuid)
         self.obj_reset_changes()
 
     def set_key_value_pair(self, set_key, set_value):
+        raise NotImplementedError() # HACK
         self.key = set_key
         self.value = set_value

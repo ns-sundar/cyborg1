@@ -89,6 +89,7 @@ def upgrade():
       sa.Column('created_at', sa.DateTime(), nullable=True),
       sa.Column('updated_at', sa.DateTime(), nullable=True),
       sa.Column('id', sa.Integer(), nullable=False, primary_key=True),
+      sa.Column('uuid', sa.String(length=36), unique=True, nullable=False),
       sa.Column('name', sa.String(length=255), nullable=False, unique=True),
       sa.Column('json', sa.String(length=1000), nullable=True),
     )

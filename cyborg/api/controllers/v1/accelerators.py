@@ -144,6 +144,7 @@ class AcceleratorsController(AcceleratorsControllerBase):
 
         :param acc: an accelerator within the request body.
         """
+        raise NotImplementedError() # HACK
         context = pecan.request.context
         obj_acc = objects.Accelerator(context, **acc)
         new_acc = pecan.request.conductor_api.accelerator_create(context,
@@ -159,6 +160,7 @@ class AcceleratorsController(AcceleratorsControllerBase):
 
         :param uuid: UUID of an accelerator.
         """
+        raise NotImplementedError() # HACK
         obj_acc = self._resource or self._get_resource(uuid)
         return Accelerator.convert_with_links(obj_acc)
 
@@ -181,6 +183,7 @@ class AcceleratorsController(AcceleratorsControllerBase):
                             the accelerators associated with the calling
                             tenant are included in the response.
         """
+        raise NotImplementedError() # HACK
         context = pecan.request.context
         project_only = True
         if context.is_admin and all_tenants:
@@ -202,6 +205,7 @@ class AcceleratorsController(AcceleratorsControllerBase):
         :param uuid: UUID of an accelerator.
         :param patch: a json PATCH document to apply to this accelerator.
         """
+        raise NotImplementedError() # HACK
         obj_acc = self._resource or self._get_resource(uuid)
         try:
             api_acc = Accelerator(
@@ -232,6 +236,7 @@ class AcceleratorsController(AcceleratorsControllerBase):
         """Delete an accelerator.
         :param uuid: UUID of an accelerator.
         """
+        raise NotImplementedError() # HACK
         context = pecan.request.context
         obj_acc = self._resource or self._get_resource(uuid)
         pecan.request.conductor_api.accelerator_delete(context, obj_acc)

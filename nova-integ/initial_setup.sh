@@ -41,8 +41,9 @@ EOF
    INSERT INTO attach_handles_pci (domain, bus, device, function, id)
       SELECT 0, 0x5E, 0, 0,
              id FROM attach_handles WHERE type_name = 'PCI';   
-   INSERT INTO device_profiles (name,json) 
-      VALUES ('devprof.1', $dev_prof);
+   INSERT INTO device_profiles (name,json,uuid) 
+      VALUES ('devprof.1', $dev_prof,
+              'aee9ffb0-b59a-498c-aa93-7b7da06a0e6e');
 EOF
 
    set -x

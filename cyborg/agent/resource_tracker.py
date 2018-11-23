@@ -127,8 +127,9 @@ class ResourceTracker(object):
         # NOTE(Shaohe Feng) need more agreement on how to keep consistency.
         fpgas = self._get_fpga_devices()
         bdfs = set(fpgas.keys())
-        deployables = self.conductor_api.deployable_get_by_host(
-            context, self.host)
+        # HACK Needs update. This isn't the logic we want anyway.
+        deployables = None
+        # self.conductor_api.deployable_get_by_host(context, self.host)
 
         # NOTE(Shaohe Feng) when no "address" in deployable?
         accls = dict([(v["address"], v) for v in deployables])

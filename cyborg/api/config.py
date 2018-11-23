@@ -26,7 +26,7 @@ app = {
     'root': 'cyborg.api.controllers.root.RootController',
     'modules': ['cyborg.api'],
     'static_root': '%(confdir)s/public',
-    'debug': False,
+    'debug': True,
     'acl_public_routes': [
         '/',
         '/v1'

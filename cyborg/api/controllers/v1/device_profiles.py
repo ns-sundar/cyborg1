@@ -67,7 +67,6 @@ class DeviceProfile(base.APIBase):
             link.Link.make_link('bookmark', url, 'device_profiles', api_devprof.uuid,
                                 bookmark=True)
             ]
-        # TODO query = {"device_profile_id": obj_devprof.id}
         return api_devprof
 
 
@@ -84,21 +83,8 @@ class DeviceProfileCollection(base.APIBase):
                                   for obj_devprof in obj_devprofs]
         return collection
 
-
-class DeviceProfilePatchType(types.JsonPatchType):
-
-    _api_base = DeviceProfile
-
-    @staticmethod
-    def internal_attrs():
-        defaults = types.JsonPatchType.internal_attrs()
-        return defaults + ['/address', '/host', '/type']
-
-
 class DeviceProfilesController(base.CyborgController):
     """REST controller for DeviceProfiles."""
-
-    _custom_actions = {'program': ['PATCH']}
 
     # @policy.authorize_wsgi("cyborg:device_profile", "create", False)
     @expose.expose(DeviceProfile, body=types.jsontype,

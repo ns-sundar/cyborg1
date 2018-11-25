@@ -20,6 +20,7 @@ import wsme
 from wsme import types as wtypes
 
 from oslo_log import log
+from oslo_serialization import jsonutils
 
 from cyborg.api.controllers import base
 from cyborg.api.controllers import link
@@ -31,6 +32,9 @@ from cyborg.common import policy
 from cyborg import objects
 from cyborg.quota import QUOTAS
 from cyborg.agent.rpcapi import AgentAPI
+
+LOG = log.getLogger(__name__)
+MYLOG = LOG
 
 class DeviceProfile(base.APIBase):
     """API representation of a device profile.
@@ -93,61 +97,48 @@ class DeviceProfilesController(base.CyborgController):
         """Create a new device_profile.
 
         :param devprof: a device_profile within the request body.
+        HACK Support more than one devprof per request
         """
         context = pecan.request.context
         obj_devprof = objects.DeviceProfile(context, **devprof)
         new_devprof = pecan.request.conductor_api.device_profile_create(context,
                                                                 obj_devprof)
         # Set the HTTP Location Header
-        pecan.response.location = link.build_url('device_profiles', new_devprof.uuid)
+        pecan.response.location = link.build_url('device_profiles',
+                                                 new_devprof.uuid)
         return DeviceProfile.convert_with_links(new_devprof)
 
-    # @policy.authorize_wsgi("cyborg:device_profile", "get_one")
-    @expose.expose(DeviceProfile, types.uuid)
-    def get_one(self, uuid):
-        """Retrieve information about the given device_profile.
-
-        :param uuid: UUID of a device_profile.
-        """
-        obj_devprof = objects.DeviceProfile.get(pecan.request.context, uuid)
-        return DeviceProfile.convert_with_links(obj_devprof)
-
     # @policy.authorize_wsgi("cyborg:device_profile", "get_all")
-    @expose.expose(DeviceProfileCollection, int, types.uuid, wtypes.text,
-                   wtypes.text, wtypes.ArrayType(types.FilterType))
-    # TODO(wangzhh): Remove limit, marker, sort_key, sort_dir in next release.
-    # They are used to compatible with R release client.
-    def get_all(self, limit=None, marker=None, sort_key='id', sort_dir='asc',
-                filters=None):
+    @expose.expose(DeviceProfileCollection, wtypes.text, wtypes.text)
+    def get_all(self, name='None', use='None'):
         """Retrieve a list of device_profiles."""
-        filters_dict = {}
-        self._generate_filters(limit, sort_key, sort_dir, filters_dict)
-        if filters:
-            for filter in filters:
-                filters_dict.update(filter.as_dict())
-        context = pecan.request.context
-        if marker:
-            marker_obj = objects.DeviceProfile.get(context, marker)
-            filters_dict["marker_obj"] = marker_obj
-        obj_devprofs = objects.DeviceProfile.list(context)
-        return DeviceProfileCollection.convert_with_links(obj_devprofs)
+        name = pecan.request.GET.get('name')
+        use  = pecan.request.GET.get('use')
+        MYLOG.warning('ctrlr dp getAll: name=(%s) use=(%s)', name, use)
 
-    def _generate_filters(self, limit, sort_key, sort_dir, filters_dict):
-        """This method are used to compatible with R release client."""
-        if limit:
-            filters_dict["limit"] = limit
-        if sort_key:
-            filters_dict["sort_key"] = sort_key
-        if sort_dir:
-            filters_dict["sort_dir"] = sort_dir
+        context = pecan.request.context
+        obj_devprofs = objects.DeviceProfile.list(context)
+        if name:
+            new_obj_devprofs = [devprof for devprof in obj_devprofs
+                                 if devprof['name'] in name]
+            obj_devprofs = new_obj_devprofs
+        if use is not None and use == 'scheduling':
+            # HACK Figure out how to support this
+            # Returning just the devprof groups causes Pecan issues
+            pass
+        # HACK fix convert_links
+        #return DeviceProfileCollection.convert_with_links(obj_devprofs)
+        return obj_devprofs
 
     # @policy.authorize_wsgi("cyborg:device_profile", "delete")
-    @expose.expose(None, types.uuid, status_code=http_client.NO_CONTENT)
-    def delete(self, uuid):
+    @expose.expose(None, wtypes.text, status_code=http_client.NO_CONTENT)
+    def delete(self, name):
         """Delete a device_profile.
 
-        :param uuid: UUID of a device_profile.
+        :param name: name of a device_profile.
+        HACK Support more than one devprof per request
         """
         context = pecan.request.context
-        obj_devprof = objects.DeviceProfile.get(context, uuid)
-        pecan.request.conductor_api.device_profile_delete(context, obj_devprof)
+        obj_devprof = objects.DeviceProfile.get(context, name)
+        pecan.request.conductor_api.device_profile_delete(context,
+                              obj_devprof)

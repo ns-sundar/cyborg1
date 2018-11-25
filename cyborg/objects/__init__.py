@@ -29,3 +29,4 @@ def register_all():
     __import__('cyborg.objects.deployable')
     __import__('cyborg.objects.attribute')
     __import__('cyborg.objects.device_profile')
+    __import__('cyborg.objects.arq')

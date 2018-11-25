@@ -108,7 +108,7 @@ class ControlPathID(Base):
         of these, in which case the Cyborg driver needs to know how
         to handle these.
     """
-    __tablename__ = 'controlpath_id'
+    __tablename__ = 'controlpath_ids'
 
     id = Column(Integer, primary_key=True, unique=True)
     type_name = Column(String(30), nullable=False)
@@ -117,19 +117,19 @@ class ControlPathID(Base):
                     nullable=False)
 
     __mapper_args__ = {
-        'polymorphic_identity':'controlpath_id',
+        'polymorphic_identity':'controlpath_ids',
         'polymorphic_on': type_name
     }
 
 class ControlPathID_PCI(ControlPathID):
     """ Control Path Interface ID as a PCI BDF
     """
-    __tablename__ = 'controlpath_id_pci'
+    __tablename__ = 'controlpath_ids_pci'
     __mapper_args__ = {
         'polymorphic_identity':'controlpath_id_pci',
     }
 
-    id = Column(Integer, ForeignKey('controlpath_id.id'), primary_key=True)
+    id = Column(Integer, ForeignKey('controlpath_ids.id'), primary_key=True)
     domain = Column(Integer, nullable=False)
     bus    = Column(Integer, nullable=False)
     device = Column(Integer, nullable=False)
@@ -139,7 +139,7 @@ class AttachHandle(Base):
     """ An identifer for an object by which an accelerator is
         attached to an instance (VM). E.g. PCI PF.
     """
-    __tablename__ = 'attach_handle'
+    __tablename__ = 'attach_handles'
 
     id = Column(Integer, primary_key=True, unique=True)
     type_name = Column(String(255), nullable=False)
@@ -148,18 +148,18 @@ class AttachHandle(Base):
                     nullable=False)
 
     __mapper_args__ = {
-        'polymorphic_identity':'attach_handle',
+        'polymorphic_identity':'attach_handles',
         'polymorphic_on': type_name
     }
 
 class AttachHandle_PCI(AttachHandle):
     """ Attach Handle as a PCI BDF """
-    __tablename__ = 'attach_handle_pci'
+    __tablename__ = 'attach_handles_pci'
     __mapper_args__ = {
-        'polymorphic_identity':'attach_handle_pci',
+        'polymorphic_identity':'attach_handles_pci',
     }
 
-    id = Column(Integer, ForeignKey('attach_handle.id'), primary_key=True)
+    id = Column(Integer, ForeignKey('attach_handles.id'), primary_key=True)
     domain = Column(Integer, nullable=False)
     bus    = Column(Integer, nullable=False)
     device = Column(Integer, nullable=False)
@@ -237,6 +237,12 @@ class DeviceProfile(Base):
     """
     __tablename__ = 'device_profiles'
 
+    def __str__(self):
+       s = "id: (%s) uuid: (%s) name: (%s) json: (%s)" % (
+               self.id, self.uuid, self.name, self.json
+           )
+       return s
+
     id = Column(Integer, primary_key=True, unique=True, nullable=False)
     uuid = Column(String(36), nullable=False, unique=True)
     name=Column(String(255), nullable=False, unique=True)
@@ -252,22 +258,33 @@ class DeviceProfile(Base):
 class ARQ(Base):
     """ Accelerator Request. """
 
-    __tablename__ = 'arq'
+    __tablename__ = 'arqs'
+
+    def __str__(self):
+       s = ("uuid: %s state: %s dp_id: %s host: %s dev_uuid: %s inst_uuid: %s"
+             % (self.uuid, self.state, self.device_profile_id,
+                self.host_name, self.device_rp_uuid, self.instance_uuid)
+           )
+       return s
 
     id = Column(Integer, primary_key=True, unique=True, nullable=False)
     uuid = Column(String(36), unique=True, nullable=False)
     state = Column(String(36), nullable=False) # HACK: shd be an enum
     device_profile_id = Column(Integer, ForeignKey('device_profiles.id'),
                                nullable=False)
-    host_name = Column(String(255))
-    device_rp_uuid = Column(String(255))
-    instance_uuid = Column(String(255))
+    host_name = Column(String(255), nullable=True)
+    device_rp_uuid = Column(String(255), nullable=True)
+    instance_uuid = Column(String(255), nullable=True)
 
 class ExtARQ(Base):
     """ Cyborg object that wraps an ARQ with Cyborg-private fields.
         See note above.
     """
 
-    __tablename__ = 'extarq'
+    __tablename__ = 'extarqs'
     id = Column(Integer, primary_key=True, unique=True, nullable=False)
     arq_uuid = Column(Integer, ForeignKey('arq.uuid'), nullable=False)
+
+if __name__ == "__main__":
+   arq = ARQ()
+   print arq

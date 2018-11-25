@@ -41,6 +41,7 @@ from sqlalchemy import and_
 
 _CONTEXT = threading.local()
 LOG = log.getLogger(__name__)
+MYLOG = LOG
 
 main_context_manager = enginefacade.transaction_context()
 
@@ -363,8 +364,8 @@ class Connection(api.Connection):
         if attribute_filters:
             query = query.outerjoin(models.Attribute)
             query = query.filter(or_(*[and_(models.Attribute.key == k,
-                                       models.Attribute.value == v)
-                                       for k, v in attribute_filters.items()]))
+                                 models.Attribute.value == v)
+                                 for k, v in attribute_filters.items()]))
         return query
 
     def _exact_deployable_filter(self, query, filters, legal_keys):
@@ -763,7 +764,7 @@ class Connection(api.Connection):
                 session.add(devprof)
                 session.flush()
             except db_exc.DBDuplicateEntry:
-                raise exception.StandardError # HACK use specific exception
+                raise RuntimeError() # HACK use specific exception
             return devprof
 
     def device_profile_get(self, context, name):
@@ -772,7 +773,15 @@ class Connection(api.Connection):
         try:
             return query.one()
         except NoResultFound:
-            raise exception.StandardError # HACK use specific exception
+            raise RuntimeError() # HACK use specific exception
+
+    def device_profile_get_by_id(self, context, id):
+        query = model_query(context,
+                   models.DeviceProfile).filter_by(id=id)
+        try:
+            return query.one()
+        except NoResultFound:
+            raise RuntimeError() # HACK use specific exception
 
     def device_profile_list(self, context):
         query = model_query(context, models.DeviceProfile)
@@ -782,7 +791,7 @@ class Connection(api.Connection):
         try:
             return self._do_update_device_profile(context, name, values)
         except db_exc.DBDuplicateEntry as e:
-            raise exception.StandardError # HACK use specific exception
+            raise RuntimeError() # HACK use specific exception
 
     @oslo_db_api.retry_on_deadlock
     def _do_update_device_profile(self, context, name, values):
@@ -792,7 +801,7 @@ class Connection(api.Connection):
             try:
                 ref = query.with_lockmode('update').one()
             except NoResultFound:
-                raise exception.StandardError # HACK use specific exception
+                raise RuntimeError() # HACK use specific exception
 
             ref.update(values)
         return ref
@@ -803,4 +812,69 @@ class Connection(api.Connection):
             query = add_identity_filter(query, name)
             count = query.delete()
             if count != 1:
-                raise exception.StandardError # HACK use specific exception
+                raise RuntimeError() # HACK use specific exception
+
+    def arq_create(self, context, values):
+        if not values.get('uuid'):
+            values['uuid'] = uuidutils.generate_uuid()
+
+        if values.get('device_profile_id'):
+             pass # Already have the devprof id, so nothing to do
+        elif values.get('device_profile_name'):
+            MYLOG.warning("db arq_create: Querying devprof to get id.")
+            devprof = self.device_profile_get(context,
+                                  values['device_profile_name'])
+            values['device_profile_id'] = devprof['id']
+        else:
+            # HACK use specific exception
+            raise RuntimeError('Device profile name/id required')
+
+        arq = models.ARQ()
+        arq.update(values)
+
+        with _session_for_write() as session:
+            try:
+                session.add(arq)
+                session.flush()
+            except db_exc.DBDuplicateEntry:
+                raise RuntimeError() # HACK use specific exception
+            return arq
+
+    def arq_get(self, context, name):
+        query = model_query(context,
+                   models.ARQ).filter_by(name=name)
+        try:
+            return query.one()
+        except NoResultFound:
+            raise RuntimeError() # HACK use specific exception
+
+    def arq_list(self, context):
+        query = model_query(context, models.ARQ)
+        return query.all()
+
+    def arq_update(self, context, name, values):
+        try:
+            return self._do_update_arq(context, name, values)
+        except db_exc.DBDuplicateEntry as e:
+            raise RuntimeError() # HACK use specific exception
+
+    @oslo_db_api.retry_on_deadlock
+    def _do_update_arq(self, context, name, values):
+        with _session_for_write():
+            query = model_query(context, models.ARQ)
+            query = add_identity_filter(query, name)
+            try:
+                ref = query.with_lockmode('update').one()
+            except NoResultFound:
+                raise RuntimeError() # HACK use specific exception
+
+            ref.update(values)
+        return ref
+
+    def arq_delete(self, context, name):
+        with _session_for_write():
+            query = model_query(context, models.ARQ)
+            query = add_identity_filter(query, name)
+            count = query.delete()
+            if count != 1:
+                raise RuntimeError() # HACK use specific exception

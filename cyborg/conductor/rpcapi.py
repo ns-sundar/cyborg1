@@ -22,6 +22,9 @@ from cyborg.common import constants
 from cyborg.common import rpc
 from cyborg.objects import base as objects_base
 
+from oslo_log import log
+LOG = log.getLogger(__name__)
+MYLOG = LOG
 
 CONF = cfg.CONF
 
@@ -154,3 +157,36 @@ class ConductorAPI(object):
         """
         cctxt = self.client.prepare(topic=self.topic)
         return cctxt.call(context, 'deployable_list')
+
+    # TODO Why do we need get and list methods here? API layer handles them.
+    def arq_create(self, context, obj_arq, device_profile_id=None):
+        """Signal to conductor service to create an arq.
+
+        :param context: request context.
+        :param obj_arq: a created (but not saved) arq object.
+        :returns: created arq object.
+        """
+        cctxt = self.client.prepare(topic=self.topic)
+        arq_ret = cctxt.call(context, 'arq_create', obj_arq=obj_arq,
+                             device_profile_id=device_profile_id)
+        return arq_ret
+
+    def arq_update(self, context, obj_arq):
+        """Signal to conductor service to update an arq.
+
+        :param context: request context.
+        :param obj_arq: an arq object to update.
+        :returns: updated arq object.
+        """
+        cctxt = self.client.prepare(topic=self.topic)
+        return cctxt.call(context, 'arq_update', obj_arq=obj_arq)
+
+    def arq_delete(self, context, obj_arq):
+        """Signal to conductor service to delete an arq.
+
+        :param context: request context.
+        :param obj_arq: an arq object to delete.
+        """
+        cctxt = self.client.prepare(topic=self.topic)
+        cctxt.call(context, 'arq_delete', obj_arq=obj_arq)
+

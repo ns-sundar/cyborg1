@@ -3,16 +3,16 @@
 setup_db() {
    local TMP_DEV_PROF="/tmp/device-profiles.txt"
    cat <<EOF > $TMP_DEV_PROF
-   { 'version' : '1.0',
-     'groups'  : [
-         { 'resources:CUSTOM_ACCELERATOR_FPGA=1',
-           'trait:CUSTOM_FPGA_INTEL_PAC_ARRIA10=required',
-           'trait:CUSTOM_FUNCTION_91855328_7C3B_4EEC_BDD7_B3F4650CE320=required'
+   { "version" : "1.0",
+     "groups"  : [
+         { "resources:CUSTOM_ACCELERATOR_FPGA": "1",
+           "trait:CUSTOM_FPGA_INTEL_PAC_ARRIA10": "required",
+           "trait:CUSTOM_FUNCTION_ID_3AFB": "required"
          }
      ]
    }
 EOF
-   local dev_prof=\"`cat $TMP_DEV_PROF | tr -s '\n' ' '`\"
+   local dev_prof=\'`cat $TMP_DEV_PROF | tr -s '\n' ' '`\'
    echo "dev_prof:" $dev_prof
 
    # Simple db setup with only one row in each table
@@ -35,7 +35,7 @@ EOF
       SELECT 'PCI', id FROM devices WHERE type = 'FPGA';
    INSERT INTO controlpath_ids_pci (domain, bus, device, function, id)
       SELECT 0, 0x5E, 0, 0,
-             id FROM controlpath_ids WHERE type_name = 'PCI';   
+             id FROM controlpath_ids WHERE type_name = 'PCI'; 
    INSERT INTO attach_handles (type_name, device_id)
       SELECT 'PCI', id FROM devices WHERE type = 'FPGA';
    INSERT INTO attach_handles_pci (domain, bus, device, function, id)
@@ -56,7 +56,7 @@ setup_placement() {
    local rc='CUSTOM_ACCELERATOR_FPGA'
    local rp='FPGA_Intel_PAC_Arria10_1'
    local trait1="CUSTOM_FPGA_INTEL_PAC_ARRIA10"
-   local trait2="CUSTOM_FUNCTION_91855328_7C3B_4EEC_BDD7_B3F4650CE320"
+   local trait2="CUSTOM_FUNCTION_ID_3AFB"
 
    # Placement endpoint URL
    local endpt=`openstack endpoint list -c URL -f value | grep place`
@@ -83,13 +83,13 @@ setup_placement() {
    local cn_uuid=$(eval $CURL "${endpt}/resource_providers\?name=$HOSTNAME" | \
       python -c 'import sys, json; r=json.load(sys.stdin); print r["resource_providers"][0]["uuid"]')
    echo "   Compute node UUID: " $cn_uuid
-   
+  
    local body="{\"name\": \"$rp\", \"parent_provider_uuid\": \"$cn_uuid\"}"
    local rp_create_out=$(eval $POST \'$body\' ${endpt}/resource_providers)
    local status=$?
    local dev_rp_uuid=""
    [[ $status -eq 0 ]] && \
-      dev_rp_uuid=$(echo $rp_create_out | 
+      dev_rp_uuid=$(echo $rp_create_out |
         python -c 'import sys, json; r=json.load(sys.stdin); print r["uuid"]')
    echo "Device RP UUID: " $dev_rp_uuid
 
@@ -101,7 +101,7 @@ setup_placement() {
 
    echo "Populate inventory for device RP"
    body="{\"resource_provider_generation\": 1, \"total\": 1}"
-   url="${endpt}/resource_providers/${dev_rp_uuid}/inventories/$rc" 
+   url="${endpt}/resource_providers/${dev_rp_uuid}/inventories/$rc"
    set -x
    eval $PUT -d \'$body\' $url
    set +x

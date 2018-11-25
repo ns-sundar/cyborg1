@@ -18,6 +18,9 @@ import oslo_messaging as messaging
 from cyborg.conf import CONF
 from cyborg import objects
 
+from oslo_log import log
+LOG = log.getLogger(__name__)
+MYLOG = LOG
 
 class ConductorManager(object):
     """Cyborg Conductor manager main class."""
@@ -119,3 +122,32 @@ class ConductorManager(object):
         :returns: a list of deployable objects.
         """
         return objects.Deployable.list(context)
+
+    def arq_create(self, context, obj_arq, device_profile_id=None):
+        """Create a new arq.
+
+        :param context: request context.
+        :param obj_arq: a changed (but not saved) obj_arq object.
+        :returns: created obj_arq object.
+        """
+        obj_arq.create(context, device_profile_id)
+        return obj_arq
+
+    def arq_update(self, context, obj_arq):
+        """Update an arq.
+
+        :param context: request context.
+        :param obj_arq: an arq object to update.
+        :returns: updated arq object.
+        """
+        obj_arq.save(context)
+        return obj_arq
+
+    def arq_delete(self, context, obj_arq):
+        """Delete an arq.
+
+        :param context: request context.
+        :param obj_arq: an arq object to delete.
+        """
+        obj_arq.destroy(context)
+

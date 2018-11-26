@@ -60,15 +60,25 @@ class ARQ(base.CyborgObject, object_base.VersionedObjectDictCompat):
 
         db_arq = self.dbapi.arq_create(context, values)
         for n in ['host_name', 'device_rp_uuid', 'instance_uuid']:
-            # HACK: force these field to be not None
+            # HACK: force these fields to be not None
             if db_arq[n] is None:
                 db_arq[n] = ''
         self._from_db_object(self, db_arq)
 
     @classmethod
-    def get(cls, context, name):
+    def get(cls, context, uuid):
         """Find a DB ARQ and return an Obj ARQ."""
-        db_arq = cls.dbapi.arq_get(context, name)
+        db_arq = cls.dbapi.arq_get(context, uuid)
+        db_devprof = cls.dbapi.device_profile_get_by_id(context,
+                         db_arq.device_profile_id)
+        db_arq['device_profile_name'] = db_devprof['name']
+        for n in ['host_name', 'device_rp_uuid', 'instance_uuid']:
+            # HACK: force these fields to be not None
+            #    This should probably be in db layer
+            if db_arq[n] is None:
+                db_arq[n] = ''
+        MYLOG.warning('obj arq get: db_arq: (%s), dpname: (%s)',
+                      db_arq, db_arq['device_profile_name'])
         obj_arq = cls._from_db_object(cls(context), db_arq)
         return obj_arq
 
@@ -80,7 +90,7 @@ class ARQ(base.CyborgObject, object_base.VersionedObjectDictCompat):
            db_devprof = cls.dbapi.device_profile_get_by_id(context,
                             db_arq.device_profile_id)
            db_arq['device_profile_name'] = db_devprof['name']
-           # HACK: force these field to be not None
+           # HACK: force these fields to be not None
            for n in ['host_name', 'device_rp_uuid', 'instance_uuid']:
                if db_arq[n] is None:
                    db_arq[n] = ''
@@ -91,6 +101,9 @@ class ARQ(base.CyborgObject, object_base.VersionedObjectDictCompat):
         """Update an ARQ record in the DB."""
         updates = self.obj_get_changes()
         db_arq = self.dbapi.arq_update(context, self.uuid, updates)
+        db_devprof = ARQ.dbapi.device_profile_get_by_id(context,
+                            db_arq.device_profile_id)
+        db_arq['device_profile_name'] = db_devprof['name']
         self._from_db_object(self, db_arq)
 
     def destroy(self, context):
@@ -99,13 +112,12 @@ class ARQ(base.CyborgObject, object_base.VersionedObjectDictCompat):
         self.obj_reset_changes()
 
     @classmethod
-    def _from_db_object(cls, obj, db_obj):
+    def _from_db_object(cls, arq, db_arq):
         """Converts an ARQ to a formal object.
 
-        :param obj: An object of the class.
-        :param db_obj: A DB model of the object
+        :param arq: An object of the class ARQ
+        :param db_arq: A DB model of the object
         :return: The object of the class with the database entity added
         """
-        obj = base.CyborgObject._from_db_object(obj, db_obj)
-
-        return obj
+        arq = base.CyborgObject._from_db_object(arq, db_arq)
+        return arq

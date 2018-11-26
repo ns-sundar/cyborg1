@@ -267,6 +267,10 @@ class ARQ(Base):
            )
        return s
 
+    # NOTE: May be it is simpler to have the device_profile_name as 
+    # the foreign key (it is unique anyway), because the objects layer
+    # has to translate between device profile id and name.
+
     id = Column(Integer, primary_key=True, unique=True, nullable=False)
     uuid = Column(String(36), unique=True, nullable=False)
     state = Column(String(36), nullable=False) # HACK: shd be an enum

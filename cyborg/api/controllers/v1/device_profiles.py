@@ -43,7 +43,7 @@ class DeviceProfile(base.APIBase):
     between the internal object model and the API representation of
     a device profile.
     """
-    uuid = types.uuid
+    uuid = wtypes.text # types.uuid
     """The UUID of the device profile"""
 
     name = wtypes.text
@@ -114,7 +114,6 @@ class DeviceProfilesController(base.CyborgController):
         """Retrieve a list of device_profiles."""
         name = pecan.request.GET.get('name')
         use  = pecan.request.GET.get('use')
-        MYLOG.warning('ctrlr dp getAll: name=(%s) use=(%s)', name, use)
 
         context = pecan.request.context
         obj_devprofs = objects.DeviceProfile.list(context)
@@ -123,15 +122,15 @@ class DeviceProfilesController(base.CyborgController):
                                  if devprof['name'] in name]
             obj_devprofs = new_obj_devprofs
         if use is not None and use == 'scheduling':
-            # HACK Figure out how to support this
+            # TODO Figure out how to support this
             # Returning just the devprof groups causes Pecan issues
             pass
         # HACK fix convert_links
-        #return DeviceProfileCollection.convert_with_links(obj_devprofs)
-        return obj_devprofs
+        return DeviceProfileCollection.convert_with_links(obj_devprofs)
+        #return obj_devprofs
 
     # @policy.authorize_wsgi("cyborg:device_profile", "delete")
-    @expose.expose(None, wtypes.text, status_code=http_client.NO_CONTENT)
+    @expose.expose(DeviceProfile, wtypes.text, status_code=http_client.NO_CONTENT)
     def delete(self, name):
         """Delete a device_profile.
 
@@ -140,5 +139,6 @@ class DeviceProfilesController(base.CyborgController):
         """
         context = pecan.request.context
         obj_devprof = objects.DeviceProfile.get(context, name)
+        # TODO Implement device profile delete
         pecan.request.conductor_api.device_profile_delete(context,
                               obj_devprof)

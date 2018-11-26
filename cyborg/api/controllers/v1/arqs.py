@@ -148,7 +148,9 @@ class ARQsController(base.CyborgController):
         # HACK Need to implement 'arq=uuid1,...' query parameter
         context = pecan.request.context
         obj_arqs = objects.ARQ.list(context)
-        if state is not None and state == 'resolved':
+        if state is not None:
+            if state != 'resolved':
+                raise RuntimeError('Only state "resolved" is supported')
             new_arqs = [arq for arq in obj_arqs
                            if arq['state'] == 'Bound' or
                               arq['state'] == 'BindFailed'

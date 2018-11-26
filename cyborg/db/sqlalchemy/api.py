@@ -781,7 +781,7 @@ class Connection(api.Connection):
         try:
             return query.one()
         except NoResultFound:
-            raise RuntimeError() # HACK use specific exception
+            raise RuntimeError('No device profile with id (%s)' % id) # HACK use specific exception
 
     def device_profile_list(self, context):
         query = model_query(context, models.DeviceProfile)
@@ -840,13 +840,13 @@ class Connection(api.Connection):
                 raise RuntimeError() # HACK use specific exception
             return arq
 
-    def arq_get(self, context, name):
+    def arq_get(self, context, uuid):
         query = model_query(context,
-                   models.ARQ).filter_by(name=name)
+                   models.ARQ).filter_by(uuid=uuid)
         try:
             return query.one()
         except NoResultFound:
-            raise RuntimeError() # HACK use specific exception
+            raise RuntimeError('No ARQ found with UUID %s' % uuid)
 
     def arq_list(self, context):
         query = model_query(context, models.ARQ)

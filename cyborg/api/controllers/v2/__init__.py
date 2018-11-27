@@ -13,7 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-"""Version 1 of the Cyborg API"""
+"""Version 2 of the Cyborg API"""
 
 import pecan
 from pecan import rest
@@ -21,11 +21,11 @@ from wsme import types as wtypes
 
 from cyborg.api.controllers import base
 from cyborg.api.controllers import link
-from cyborg.api.controllers.v1 import accelerators
-from cyborg.api.controllers.v1 import deployables
-from cyborg.api.controllers.v1 import device_profiles
-from cyborg.api.controllers.v1 import arqs
-from cyborg.api.controllers.v1 import arq_bindings
+from cyborg.api.controllers.v2 import accelerators
+from cyborg.api.controllers.v2 import deployables
+from cyborg.api.controllers.v2 import device_profiles
+from cyborg.api.controllers.v2 import arqs
+from cyborg.api.controllers.v2 import arq_bindings
 from cyborg.api import expose
 
 
@@ -40,15 +40,15 @@ class V1(base.APIBase):
 
     @staticmethod
     def convert():
-        v1 = V1()
-        v1.id = 'v1'
-        v1.accelerator = [
+        v2 = V1()
+        v2.id = 'v2'
+        v2.accelerator = [
             link.Link.make_link('self', pecan.request.public_url,
                                 'accelerator', ''),
             link.Link.make_link('bookmark', pecan.request.public_url,
                                 'accelerator', '', bookmark=True)
             ]
-        return v1
+        return v2
 
 
 class Controller(rest.RestController):

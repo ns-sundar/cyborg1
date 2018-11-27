@@ -23,8 +23,8 @@ from oslo_log import log
 
 from cyborg.api.controllers import base
 from cyborg.api.controllers import link
-from cyborg.api.controllers.v1 import types
-from cyborg.api.controllers.v1 import utils as api_utils
+from cyborg.api.controllers.v2 import types
+from cyborg.api.controllers.v2 import utils as api_utils
 from cyborg.api import expose
 from cyborg.common import exception
 from cyborg.common import policy
@@ -231,7 +231,7 @@ class DeployablesController(base.CyborgController):
     def patch(self, uuid, patch):
         """Update a deployable.
 
-        Usage: curl -X PATCH {ip}:{port}/v1/accelerators/deployables/
+        Usage: curl -X PATCH {ip}:{port}/v2/accelerators/deployables/
         {deployable_uuid} -d '[{"path":"/instance_uuid","value":
         {instance_uuid}, "op":"replace"}]'  -H "Content-type:
         application/json"

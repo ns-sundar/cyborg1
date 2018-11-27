@@ -20,9 +20,9 @@ from wsme import types as wtypes
 
 from cyborg.api.controllers import base
 from cyborg.api.controllers import link
-from cyborg.api.controllers.v1 import deployables
-from cyborg.api.controllers.v1 import types
-from cyborg.api.controllers.v1 import utils as api_utils
+from cyborg.api.controllers.v2 import deployables
+from cyborg.api.controllers.v2 import types
+from cyborg.api.controllers.v2 import utils as api_utils
 from cyborg.api import expose
 from cyborg.common import exception
 from cyborg.common import policy

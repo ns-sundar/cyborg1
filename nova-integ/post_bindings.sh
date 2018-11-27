@@ -1,7 +1,7 @@
 #!/bin/bash
 
 create_arqs() {
-   curl -H "Content-Type: application/json" -X POST -d '{"device_profile_name": "devprof.1"}' http://192.168.122.4/accelerator/v1/arqs
+   curl -H "Content-Type: application/json" -X POST -d '{"device_profile_name": "devprof.1"}' http://192.168.122.4/accelerator/v2/arqs
 }
 
 post_bindings() {
@@ -18,9 +18,9 @@ post_bindings() {
 EOF
    body=`cat /tmp/arq_binding_json.txt`
 
-   curl -H "Content-Type: application/json" -X POST -d "$body" http://192.168.122.4/accelerator/v1/arq_bindings
+   curl -H "Content-Type: application/json" -X POST -d "$body" http://192.168.122.4/accelerator/v2/arq_bindings
    /bin/rm -f /tmp/arq_binding_json.txt
 }
 
-# create_arqs
+create_arqs
 post_bindings

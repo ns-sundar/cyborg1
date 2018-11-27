@@ -23,7 +23,7 @@ def build_url(resource, resource_args, bookmark=False, base_url=None):
     if base_url is None:
         base_url = pecan.request.public_url
 
-    template = '%(url)s/%(res)s' if bookmark else '%(url)s/v1/%(res)s'
+    template = '%(url)s/%(res)s' if bookmark else '%(url)s/v2/%(res)s'
     template += '%(args)s' if resource_args.startswith('?') else '/%(args)s'
     return template % {'url': base_url, 'res': resource, 'args': resource_args}
 

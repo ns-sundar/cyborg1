@@ -108,5 +108,5 @@ setup_placement() {
 }
 
 #### Main
-setup_db
+# setup_db
 setup_placement

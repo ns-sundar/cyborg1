@@ -20,3 +20,5 @@ curl -i -H "Content-Type: application/json" -d '
  }
  }
 }' "http://localhost/identity/v3/auth/tokens" ; echo
+
+# RUn: export MY_TOKEN=$(./get-token.sh | awk -F':' '/X-Subject-Token/ {print $2}')

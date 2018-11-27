@@ -38,7 +38,7 @@ def upgrade():
       sa.Column('root_uuid', sa.String(length=36),
                 sa.ForeignKey('deployables.uuid', ondelete='CASCADE')),
       sa.Column('device_id', sa.Integer(),
-                sa.ForeignKey('devices.id', ondelete='CASCADE'),
+                sa.ForeignKey('devices.id', ondelete='RESTRICT'),
                 nullable=False),
       sa.Column('num_accelerators', sa.Integer())
     )
@@ -49,7 +49,7 @@ def upgrade():
       sa.Column('id',sa.Integer(), nullable=False, primary_key=True),
       sa.Column('type_name', sa.String(length=30), nullable=False),
       sa.Column('device_id', sa.Integer,
-                sa.ForeignKey('devices.id', ondelete='CASCADE'),
+                sa.ForeignKey('devices.id', ondelete='RESTRICT'),
                 unique=True, nullable=False)
     )
 
@@ -57,7 +57,7 @@ def upgrade():
       sa.Column('created_at', sa.DateTime(), nullable=True),
       sa.Column('updated_at', sa.DateTime(), nullable=True),
       sa.Column('id', sa.Integer,
-                 sa.ForeignKey('controlpath_ids.id', ondelete='CASCADE'),
+                 sa.ForeignKey('controlpath_ids.id', ondelete='RESTRICT'),
                  unique=True, nullable=False),
       sa.Column('domain', sa.Integer, nullable=False),
       sa.Column('bus', sa.Integer, nullable=False),
@@ -70,14 +70,17 @@ def upgrade():
       sa.Column('updated_at', sa.DateTime(), nullable=True),
       sa.Column('id',sa.Integer(), nullable=False, primary_key=True),
       sa.Column('type_name', sa.String(length=255), nullable=False),
-      sa.Column('device_id', sa.Integer, nullable=False)
+      sa.Column('device_id', sa.Integer,
+                sa.ForeignKey('devices.id', ondelete='RESTRICT'),
+                nullable=False),
+      sa.Column('in_use', sa.Boolean, default=False),
     )
 
     op.create_table('attach_handles_pci',
       sa.Column('created_at', sa.DateTime(), nullable=True),
       sa.Column('updated_at', sa.DateTime(), nullable=True),
       sa.Column('id', sa.Integer,
-                 sa.ForeignKey('attach_handles.id', ondelete='CASCADE'),
+                 sa.ForeignKey('attach_handles.id', ondelete='RESTRICT'),
                  unique=True, nullable=False),
       sa.Column('domain', sa.Integer, nullable=False),
       sa.Column('bus', sa.Integer, nullable=False),
@@ -100,17 +103,27 @@ def upgrade():
       sa.Column('id',sa.Integer(), nullable=False, primary_key=True),
       sa.Column('uuid', sa.String(length=36), unique=True, nullable=False),
       sa.Column('state', sa.String(length=36), nullable=False) ,
-      sa.Column('device_profile_id',sa.Integer, nullable=False),
+      sa.Column('device_profile_id',sa.Integer,
+          sa.ForeignKey('device_profiles.id', ondelete='RESTRICT'),
+          nullable=False),
       sa.Column('host_name', sa.String(length=255)),
       sa.Column('device_rp_uuid', sa.String(length=255)),
-      sa.Column('instance_uuid', sa.String(length=255))
+      sa.Column('instance_uuid', sa.String(length=255)),
+      sa.Column('attach_handle_id',sa.Integer,
+          sa.ForeignKey('attach_handles.id', ondelete='RESTRICT'),
+          nullable=True),
     )
 
     op.create_table('extarqs',
       sa.Column('created_at', sa.DateTime(), nullable=True),
       sa.Column('updated_at', sa.DateTime(), nullable=True),
       sa.Column('id',sa.Integer(),
-                 sa.ForeignKey('arqs.id', ondelete='CASCADE'),
+                 sa.ForeignKey('arqs.id', ondelete='RESTRICT'),
                  unique=True, nullable=False),
-      sa.Column('arq_uuid',sa.Integer, nullable=False)
+      sa.Column('arq_uuid',sa.Integer, nullable=False),
+      sa.Column('deployable_uuid', Column(Integer),
+          sa.ForeignKey('deployables.uuid', ondelete="RESTRICT"),
+          nullable=False),
+      # HACK substate shd be enum
+      sa.Column('substate', Column(String(255)), default='Initial')
     )

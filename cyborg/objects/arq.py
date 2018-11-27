@@ -40,6 +40,9 @@ class ARQ(base.CyborgObject, object_base.VersionedObjectDictCompat):
         'host_name': object_fields.StringField(),
         'device_rp_uuid': object_fields.StringField(), # TODO uuidfield?
         'instance_uuid': object_fields.StringField(), # TODO uuidfield?
+
+         # HACK Shd be attach_handle object, with PCI subclass
+        'attach_handle_id_pci': object_fields.StringField()
     }
 
     def create(self, context, device_profile_id=None):
@@ -110,6 +113,14 @@ class ARQ(base.CyborgObject, object_base.VersionedObjectDictCompat):
         """Delete an ARQ from the DB."""
         self.dbapi.arq_delete(context, self.name)
         self.obj_reset_changes()
+
+    # HACK: all binding logic should be in the conductor
+    def bind(self, context, device_rp_uuid):
+        """ Given a device rp UUID, get the deployable UUID and 
+            an attach handle. Create an ExtARQ.
+        """
+        # HACK: hardcode values for now.
+        attach_handle_id_pci = "0000:00.5e.0"
 
     @classmethod
     def _from_db_object(cls, arq, db_arq):

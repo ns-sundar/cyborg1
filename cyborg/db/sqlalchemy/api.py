@@ -781,7 +781,7 @@ class Connection(api.Connection):
         try:
             return query.one()
         except NoResultFound:
-            raise RuntimeError('No device profile with id (%s)' % id) # HACK use specific exception
+            raise RuntimeError('No device profile with id (%s)' % id)
 
     def device_profile_list(self, context):
         query = model_query(context, models.DeviceProfile)

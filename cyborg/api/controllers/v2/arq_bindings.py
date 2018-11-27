@@ -135,6 +135,7 @@ class ARQBindingsController(base.CyborgController):
         # binding. Instead, we cheat by picking a VF and setting the
         # state. TODO Pick a VF
         arq['state'] = 'Bound'
+        arq.bind(devrp_uuid) # HACK this shd be a conductor RPC
         MYLOG.warning('ctrlr post bind: arq=(%s)', arq)
 
         arq.save(context) # HACK Delegate db writes to the conductor

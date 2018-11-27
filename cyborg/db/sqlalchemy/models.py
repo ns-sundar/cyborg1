@@ -66,6 +66,17 @@ class CyborgBase(models.TimestampMixin, models.ModelBase):
 
 Base = declarative_base(cls=CyborgBase)
 
+# NOTE on dependencies: Usually, if a row in a child table depends on a row
+# in a parent table (via a Foreign Key relationship), we should prevent the
+# parent row from being deleted before the child row is deleted. We enforce
+# this with 'ondelete=RESTRICT'. There are two possible exceptions:
+# - Attributes depend on Deployables, but deleting a Deployable can
+#   automatically delete its Attributes. So, we use ondelete=CASCADE.
+# . TODO Child Deployables depend on parent Deployables in a tree. Maybe
+#   it is ok to automatically delete the children when the parent dies.
+# TODO with ondelete=CASCADE, the child rows in the db are automatically
+# deleted, but the objects i memory may still be referring to them.
+
 class Device(Base):
     """Represents physical hardware, such as a PCI card.
        It contains one or more Deployables, one or more
@@ -98,7 +109,7 @@ class Deployable(Base):
                        ForeignKey('deployables.uuid'), nullable=True)
 
     device_id = Column(Integer,
-                    ForeignKey('devices.id', ondelete="CASCADE"),
+                    ForeignKey('devices.id', ondelete="RESTRICT"),
                     nullable=False)
     num_accelerators = Column(Integer)
 
@@ -113,7 +124,7 @@ class ControlPathID(Base):
     id = Column(Integer, primary_key=True, unique=True)
     type_name = Column(String(30), nullable=False)
     device_id = Column(Integer,
-                    ForeignKey('devices.id', ondelete="CASCADE"),
+                    ForeignKey('devices.id', ondelete="RESTRICT"),
                     nullable=False)
 
     __mapper_args__ = {
@@ -129,7 +140,9 @@ class ControlPathID_PCI(ControlPathID):
         'polymorphic_identity':'controlpath_id_pci',
     }
 
-    id = Column(Integer, ForeignKey('controlpath_ids.id'), primary_key=True)
+    id = Column(Integer,
+           ForeignKey('controlpath_ids.id', ondelete="RESTRICT"),
+           primary_key=True)
     domain = Column(Integer, nullable=False)
     bus    = Column(Integer, nullable=False)
     device = Column(Integer, nullable=False)
@@ -144,8 +157,9 @@ class AttachHandle(Base):
     id = Column(Integer, primary_key=True, unique=True)
     type_name = Column(String(255), nullable=False)
     device_id = Column(Integer,
-                    ForeignKey('devices.id', ondelete="CASCADE"),
-                    nullable=False)
+        ForeignKey('devices.id', ondelete="RESTRICT"),
+        nullable=False)
+    in_use = Column(Boolean, default=False)
 
     __mapper_args__ = {
         'polymorphic_identity':'attach_handles',
@@ -159,7 +173,9 @@ class AttachHandle_PCI(AttachHandle):
         'polymorphic_identity':'attach_handles_pci',
     }
 
-    id = Column(Integer, ForeignKey('attach_handles.id'), primary_key=True)
+    id = Column(Integer,
+           ForeignKey('attach_handles.id', ondelete="RESTRICT"),
+           primary_key=True)
     domain = Column(Integer, nullable=False)
     bus    = Column(Integer, nullable=False)
     device = Column(Integer, nullable=False)
@@ -267,18 +283,31 @@ class ARQ(Base):
            )
        return s
 
-    # NOTE: May be it is simpler to have the device_profile_name as 
+    # NOTE: May be it is simpler to have the device_profile_name as
     # the foreign key (it is unique anyway), because the objects layer
     # has to translate between device profile id and name.
+
+    # Nova may delete an ARQ when the VM is destroyed. But Cyborg may still
+    # be using the ExtARQ for device cleanup. This can cause issues with
+    # referential integrity. We prevent that scenario with ONDELETE=RESTRICT
+    # in ExtARQ.
+    # TODO: However, we need to ensure that ExtARQ lifetime is bounded by ARQ
+    # lifetime, i.e., an ExtARQ is created after an ARQ and is deleted before
+    # its ARQ. So, when Nova calls to delete an ARQ, we should mark it as
+    # Deleted and return success, but actually delete it only after the
+    # ExtARQ is deleted.
 
     id = Column(Integer, primary_key=True, unique=True, nullable=False)
     uuid = Column(String(36), unique=True, nullable=False)
     state = Column(String(36), nullable=False) # HACK: shd be an enum
-    device_profile_id = Column(Integer, ForeignKey('device_profiles.id'),
-                               nullable=False)
+    device_profile_id = Column(Integer,
+        ForeignKey('device_profiles.id', ondelete="RESTRICT"),
+        nullable=False)
     host_name = Column(String(255), nullable=True)
     device_rp_uuid = Column(String(255), nullable=True)
     instance_uuid = Column(String(255), nullable=True)
+    attach_handle_id = Column(Integer,
+        ForeignKey('attach_handles.id', ondelete="RESTRICT"), nullable=True)
 
 class ExtARQ(Base):
     """ Cyborg object that wraps an ARQ with Cyborg-private fields.
@@ -287,8 +316,8 @@ class ExtARQ(Base):
 
     __tablename__ = 'extarqs'
     id = Column(Integer, primary_key=True, unique=True, nullable=False)
-    arq_uuid = Column(Integer, ForeignKey('arq.uuid'), nullable=False)
-
-if __name__ == "__main__":
-   arq = ARQ()
-   print arq
+    arq_uuid = Column(Integer,
+        ForeignKey('arqs.uuid', ondelete="RESTRICT"), nullable=False)
+    deployable_uuid = Column(Integer,
+        ForeignKey('deployables.uuid', ondelete="RESTRICT"), nullable=True)
+    substate = Column(String(255), default='Initial') # HACK shd be enum

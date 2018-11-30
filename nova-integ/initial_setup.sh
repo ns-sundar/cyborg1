@@ -2,6 +2,7 @@
 
 setup_db() {
    local TMP_DEV_PROF="/tmp/device-profiles.txt"
+   local TMP_PCI="/tmp/pci.txt"
    cat <<EOF > $TMP_DEV_PROF
    { "version" : "1.0",
      "groups"  : [
@@ -12,17 +13,22 @@ setup_db() {
      ]
    }
 EOF
+
+   cat <<EOF > $TMP_PCI
+   { "domain": "0", "bus": "0x5E", "device": "0", "function": "0" }
+EOF
+   
    local dev_prof=\'`cat $TMP_DEV_PROF | tr -s '\n' ' '`\'
-   echo "dev_prof:" $dev_prof
+   #echo "dev_prof:" $dev_prof
+   local pci_fn=\'`cat $TMP_PCI`\'
+   echo pci_fn: $pci_fn
 
    # Simple db setup with only one row in each table
    local TMP_SCRIPT="/tmp/setup-db.txt"
    cat <<EOF > $TMP_SCRIPT
    use cyborg;
    DELETE FROM device_profiles;
-   DELETE FROM attach_handles_pci;
    DELETE FROM attach_handles;
-   DELETE FROM controlpath_ids_pci;
    DELETE FROM controlpath_ids;
    DELETE FROM deployables;
    DELETE FROM devices;
@@ -31,16 +37,10 @@ EOF
    INSERT INTO deployables (uuid, num_accelerators, device_id)
       SELECT '6026b395-be7b-426f-8baa-ca88279707fd', 1,
              id FROM devices WHERE type = 'FPGA';
-   INSERT INTO controlpath_ids (type_name, device_id)
-      SELECT 'PCI', id FROM devices WHERE type = 'FPGA';
-   INSERT INTO controlpath_ids_pci (domain, bus, device, function, id)
-      SELECT 0, 0x5E, 0, 0,
-             id FROM controlpath_ids WHERE type_name = 'PCI'; 
-   INSERT INTO attach_handles (type_name, device_id)
-      SELECT 'PCI', id FROM devices WHERE type = 'FPGA';
-   INSERT INTO attach_handles_pci (domain, bus, device, function, id)
-      SELECT 0, 0x5E, 0, 0,
-             id FROM attach_handles WHERE type_name = 'PCI';   
+   INSERT INTO controlpath_ids (type_name, info, device_id)
+      SELECT 'PCI', $pci_fn, id FROM devices WHERE type = 'FPGA';
+   INSERT INTO attach_handles (type_name, info, device_id)
+      SELECT 'PCI', $pci_fn, id FROM devices WHERE type = 'FPGA';
    INSERT INTO device_profiles (name,json,uuid) 
       VALUES ('devprof.1', $dev_prof,
               'aee9ffb0-b59a-498c-aa93-7b7da06a0e6e');
@@ -49,7 +49,7 @@ EOF
    set -x
    mysql -u root -e "$(cat $TMP_SCRIPT)"
    set +x
-   /bin/rm -f $TMP_SCRIPT $TMP_DEV_PROF
+   /bin/rm -f $TMP_SCRIPT $TMP_DEV_PROF $TMP_PCI
 }
 
 setup_placement() {
@@ -108,5 +108,5 @@ setup_placement() {
 }
 
 #### Main
-# setup_db
-setup_placement
+setup_db
+# setup_placement

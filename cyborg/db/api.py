@@ -41,28 +41,6 @@ class Connection(object):
     def __init__(self):
         """Constructor."""
 
-    # accelerator
-    @abc.abstractmethod
-    def accelerator_create(self, context, values):
-        """Create a new accelerator."""
-
-    @abc.abstractmethod
-    def accelerator_get(self, context, uuid):
-        """Get requested accelerator."""
-
-    @abc.abstractmethod
-    def accelerator_list(self, context, limit, marker, sort_key, sort_dir,
-                         project_only):
-        """Get requested list of accelerators."""
-
-    @abc.abstractmethod
-    def accelerator_update(self, context, uuid, values):
-        """Update an accelerator."""
-
-    @abc.abstractmethod
-    def accelerator_delete(self, context, uuid):
-        """Delete an accelerator."""
-
     # deployable
     @abc.abstractmethod
     def deployable_create(self, context, values):

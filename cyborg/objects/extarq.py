@@ -26,7 +26,7 @@ LOG = logging.getLogger(__name__)
 MYLOG=LOG
 
 @base.CyborgObjectRegistry.register
-class ARQ(base.CyborgObject, object_base.VersionedObjectDictCompat):
+class ExtARQ(base.CyborgObject, object_base.VersionedObjectDictCompat):
     # Version 1.0: Initial version
     VERSION = '1.0'
 
@@ -41,12 +41,12 @@ class ARQ(base.CyborgObject, object_base.VersionedObjectDictCompat):
         'device_rp_uuid': object_fields.StringField(), # TODO uuidfield?
         'instance_uuid': object_fields.StringField(), # TODO uuidfield?
 
-         # HACK Shd be attach_handle object, with PCI subclass
+         # TODO Shd be attach_handle object, with PCI subclass
         'attach_handle_id_pci': object_fields.StringField()
     }
 
     def create(self, context, device_profile_id=None):
-        """Create an ARQ record in the DB."""
+        """Create an ExtARQ record in the DB."""
         # HACK TODO validate properly
         if 'device_profile_name' not in self:
             raise exception.ObjectActionError(action='create',
@@ -61,74 +61,74 @@ class ARQ(base.CyborgObject, object_base.VersionedObjectDictCompat):
         if device_profile_id is not None:
             values['device_profile_id'] = device_profile_id
 
-        db_arq = self.dbapi.arq_create(context, values)
+        db_extarq = self.dbapi.extarq_create(context, values)
         for n in ['host_name', 'device_rp_uuid', 'instance_uuid']:
             # HACK: force these fields to be not None
-            if db_arq[n] is None:
-                db_arq[n] = ''
-        self._from_db_object(self, db_arq)
+            if db_extarq[n] is None:
+                db_extarq[n] = ''
+        self._from_db_object(self, db_extarq)
 
     @classmethod
     def get(cls, context, uuid):
-        """Find a DB ARQ and return an Obj ARQ."""
-        db_arq = cls.dbapi.arq_get(context, uuid)
+        """Find a DB ExtARQ and return an Obj ExtARQ."""
+        db_extarq = cls.dbapi.extarq_get(context, uuid)
         db_devprof = cls.dbapi.device_profile_get_by_id(context,
-                         db_arq.device_profile_id)
-        db_arq['device_profile_name'] = db_devprof['name']
+                         db_extarq.device_profile_id)
+        db_extarq['device_profile_name'] = db_devprof['name']
         for n in ['host_name', 'device_rp_uuid', 'instance_uuid']:
             # HACK: force these fields to be not None
             #    This should probably be in db layer
-            if db_arq[n] is None:
-                db_arq[n] = ''
-        MYLOG.warning('obj arq get: db_arq: (%s), dpname: (%s)',
-                      db_arq, db_arq['device_profile_name'])
-        obj_arq = cls._from_db_object(cls(context), db_arq)
-        return obj_arq
+            if db_extarq[n] is None:
+                db_extarq[n] = ''
+        MYLOG.warning('obj extarq get: db_extarq: (%s), dpname: (%s)',
+                      db_extarq, db_extarq['device_profile_name'])
+        obj_extarq = cls._from_db_object(cls(context), db_extarq)
+        return obj_extarq
 
     @classmethod
     def list(cls, context):
-        """Return a list of ARQ objects."""
-        db_arqs = cls.dbapi.arq_list(context)
-        for db_arq in db_arqs:
+        """Return a list of ExtARQ objects."""
+        db_extarqs = cls.dbapi.extarq_list(context)
+        for db_extarq in db_extarqs:
            db_devprof = cls.dbapi.device_profile_get_by_id(context,
-                            db_arq.device_profile_id)
-           db_arq['device_profile_name'] = db_devprof['name']
+                            db_extarq.device_profile_id)
+           db_extarq['device_profile_name'] = db_devprof['name']
            # HACK: force these fields to be not None
            for n in ['host_name', 'device_rp_uuid', 'instance_uuid']:
-               if db_arq[n] is None:
-                   db_arq[n] = ''
-        obj_dp_list = cls._from_db_object_list(db_arqs, context)
+               if db_extarq[n] is None:
+                   db_extarq[n] = ''
+        obj_dp_list = cls._from_db_object_list(db_extarqs, context)
         return obj_dp_list
 
     def save(self, context):
-        """Update an ARQ record in the DB."""
+        """Update an ExtARQ record in the DB."""
         updates = self.obj_get_changes()
-        db_arq = self.dbapi.arq_update(context, self.uuid, updates)
-        db_devprof = ARQ.dbapi.device_profile_get_by_id(context,
-                            db_arq.device_profile_id)
-        db_arq['device_profile_name'] = db_devprof['name']
-        self._from_db_object(self, db_arq)
+        db_extarq = self.dbapi.extarq_update(context, self.uuid, updates)
+        db_devprof = ExtARQ.dbapi.device_profile_get_by_id(context,
+                            db_extarq.device_profile_id)
+        db_extarq['device_profile_name'] = db_devprof['name']
+        self._from_db_object(self, db_extarq)
 
     def destroy(self, context):
-        """Delete an ARQ from the DB."""
-        self.dbapi.arq_delete(context, self.name)
+        """Delete an ExtARQ from the DB."""
+        self.dbapi.extarq_delete(context, self.name)
         self.obj_reset_changes()
 
     # HACK: all binding logic should be in the conductor
     def bind(self, context, device_rp_uuid):
-        """ Given a device rp UUID, get the deployable UUID and 
-            an attach handle. Create an ExtARQ.
+        """ Given a device rp UUID, get the deployable UUID and
+            an attach handle.
         """
         # HACK: hardcode values for now.
         attach_handle_id_pci = "0000:00.5e.0"
 
     @classmethod
-    def _from_db_object(cls, arq, db_arq):
-        """Converts an ARQ to a formal object.
+    def _from_db_object(cls, extarq, db_extarq):
+        """Converts an ExtARQ to a formal object.
 
-        :param arq: An object of the class ARQ
-        :param db_arq: A DB model of the object
+        :param extarq: An object of the class ExtARQ
+        :param db_extarq: A DB model of the object
         :return: The object of the class with the database entity added
         """
-        arq = base.CyborgObject._from_db_object(arq, db_arq)
-        return arq
+        extarq = base.CyborgObject._from_db_object(extarq, db_extarq)
+        return extarq

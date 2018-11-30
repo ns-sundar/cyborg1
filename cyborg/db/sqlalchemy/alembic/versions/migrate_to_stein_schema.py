@@ -50,19 +50,8 @@ def upgrade():
       sa.Column('type_name', sa.String(length=30), nullable=False),
       sa.Column('device_id', sa.Integer,
                 sa.ForeignKey('devices.id', ondelete='RESTRICT'),
-                unique=True, nullable=False)
-    )
-
-    op.create_table('controlpath_ids_pci',
-      sa.Column('created_at', sa.DateTime(), nullable=True),
-      sa.Column('updated_at', sa.DateTime(), nullable=True),
-      sa.Column('id', sa.Integer,
-                 sa.ForeignKey('controlpath_ids.id', ondelete='RESTRICT'),
-                 unique=True, nullable=False),
-      sa.Column('domain', sa.Integer, nullable=False),
-      sa.Column('bus', sa.Integer, nullable=False),
-      sa.Column('device', sa.Integer, nullable=False),
-      sa.Column('function', sa.Integer, nullable=False),
+                unique=True, nullable=False),
+      sa.Column('info', sa.String(length=255), nullable=False)
     )
 
     op.create_table('attach_handles',
@@ -74,18 +63,7 @@ def upgrade():
                 sa.ForeignKey('devices.id', ondelete='RESTRICT'),
                 nullable=False),
       sa.Column('in_use', sa.Boolean, default=False),
-    )
-
-    op.create_table('attach_handles_pci',
-      sa.Column('created_at', sa.DateTime(), nullable=True),
-      sa.Column('updated_at', sa.DateTime(), nullable=True),
-      sa.Column('id', sa.Integer,
-                 sa.ForeignKey('attach_handles.id', ondelete='RESTRICT'),
-                 unique=True, nullable=False),
-      sa.Column('domain', sa.Integer, nullable=False),
-      sa.Column('bus', sa.Integer, nullable=False),
-      sa.Column('device', sa.Integer, nullable=False),
-      sa.Column('function', sa.Integer, nullable=False)
+      sa.Column('info', sa.String(length=255), nullable=False)
     )
 
     op.create_table('device_profiles',
@@ -97,10 +75,10 @@ def upgrade():
       sa.Column('json', sa.String(length=1000), nullable=True),
     )
 
-    op.create_table('arqs',
+    op.create_table('extarqs',
       sa.Column('created_at', sa.DateTime(), nullable=True),
       sa.Column('updated_at', sa.DateTime(), nullable=True),
-      sa.Column('id',sa.Integer(), nullable=False, primary_key=True),
+      sa.Column('id',sa.Integer, nullable=False, primary_key=True),
       sa.Column('uuid', sa.String(length=36), unique=True, nullable=False),
       sa.Column('state', sa.String(length=36), nullable=False) ,
       sa.Column('device_profile_id',sa.Integer,
@@ -112,18 +90,10 @@ def upgrade():
       sa.Column('attach_handle_id',sa.Integer,
           sa.ForeignKey('attach_handles.id', ondelete='RESTRICT'),
           nullable=True),
-    )
-
-    op.create_table('extarqs',
-      sa.Column('created_at', sa.DateTime(), nullable=True),
-      sa.Column('updated_at', sa.DateTime(), nullable=True),
-      sa.Column('id',sa.Integer(),
-                 sa.ForeignKey('arqs.id', ondelete='RESTRICT'),
-                 unique=True, nullable=False),
-      sa.Column('arq_uuid',sa.Integer, nullable=False),
-      sa.Column('deployable_uuid', Column(Integer),
-          sa.ForeignKey('deployables.uuid', ondelete="RESTRICT"),
+      # Cyborg private fields begin here
+      sa.Column('deployable_id', sa.Integer(),
+          sa.ForeignKey('deployables.id', ondelete="RESTRICT"),
           nullable=False),
       # HACK substate shd be enum
-      sa.Column('substate', Column(String(255)), default='Initial')
+      sa.Column('substate', sa.String(length=255), default='Initial')
     )

@@ -128,77 +128,8 @@ class Connection(api.Connection):
     def __init__(self):
         pass
 
-    def accelerator_create(self, context, values):
-        raise NotImplementedError() # HACK
-        if not values.get('uuid'):
-            values['uuid'] = uuidutils.generate_uuid()
-
-        accelerator = models.Accelerator()
-        accelerator.update(values)
-
-        with _session_for_write() as session:
-            try:
-                session.add(accelerator)
-                session.flush()
-            except db_exc.DBDuplicateEntry:
-                raise exception.AcceleratorAlreadyExists(uuid=values['uuid'])
-            return accelerator
-
-    def accelerator_get(self, context, uuid):
-        raise NotImplementedError() # HACK
-        query = model_query(
-            context,
-            models.Accelerator).filter_by(uuid=uuid)
-        try:
-            return query.one()
-        except NoResultFound:
-            raise exception.AcceleratorNotFound(uuid=uuid)
-
-    def accelerator_list(self, context, limit, marker, sort_key, sort_dir,
-                         project_only):
-        raise NotImplementedError() # HACK
-        query = model_query(context, models.Accelerator,
-                            project_only=project_only)
-        return _paginate_query(context, models.Accelerator, limit, marker,
-                               sort_key, sort_dir, query)
-
-    def accelerator_update(self, context, uuid, values):
-        raise NotImplementedError() # HACK
-        if 'uuid' in values:
-            msg = _("Cannot overwrite UUID for an existing Accelerator.")
-            raise exception.InvalidParameterValue(err=msg)
-
-        try:
-            return self._do_update_accelerator(context, uuid, values)
-        except db_exc.DBDuplicateEntry as e:
-            if 'name' in e.columns:
-                raise exception.DuplicateAcceleratorName(name=values['name'])
-
-    @oslo_db_api.retry_on_deadlock
-    def _do_update_accelerator(self, context, uuid, values):
-        with _session_for_write():
-            query = model_query(context, models.Accelerator)
-            query = add_identity_filter(query, uuid)
-            try:
-                ref = query.with_lockmode('update').one()
-            except NoResultFound:
-                raise exception.AcceleratorNotFound(uuid=uuid)
-
-            ref.update(values)
-        return ref
-
-    @oslo_db_api.retry_on_deadlock
-    def accelerator_delete(self, context, uuid):
-        raise NotImplementedError() # HACK
-        with _session_for_write():
-            query = model_query(context, models.Accelerator)
-            query = add_identity_filter(query, uuid)
-            count = query.delete()
-            if count != 1:
-                raise exception.AcceleratorNotFound(uuid=uuid)
-
     def deployable_create(self, context, values):
-        raise NotImplementedError() # HACK
+        raise NotImplementedError() # TODO
         if not values.get('uuid'):
             values['uuid'] = uuidutils.generate_uuid()
         if values.get('id'):
@@ -215,7 +146,7 @@ class Connection(api.Connection):
             return deployable
 
     def deployable_get(self, context, uuid):
-        raise NotImplementedError() # HACK
+        raise NotImplementedError() # TODO
         query = model_query(
             context,
             models.Deployable).filter_by(uuid=uuid)
@@ -225,19 +156,19 @@ class Connection(api.Connection):
             raise exception.DeployableNotFound(uuid=uuid)
 
     def deployable_get_by_host(self, context, host):
-        raise NotImplementedError() # HACK
+        raise NotImplementedError() # TODO
         query = model_query(
             context,
             models.Deployable).filter_by(host=host)
         return query.all()
 
     def deployable_list(self, context):
-        raise NotImplementedError() # HACK
+        raise NotImplementedError() # TODO
         query = model_query(context, models.Deployable)
         return query.all()
 
     def deployable_update(self, context, uuid, values):
-        raise NotImplementedError() # HACK
+        raise NotImplementedError() # TODO
         if 'uuid' in values:
             msg = _("Cannot overwrite UUID for an existing Deployable.")
             raise exception.InvalidParameterValue(err=msg)
@@ -264,7 +195,7 @@ class Connection(api.Connection):
 
     @oslo_db_api.retry_on_deadlock
     def deployable_delete(self, context, uuid):
-        raise NotImplementedError() # HACK
+        raise NotImplementedError() # TODO
         with _session_for_write():
             query = model_query(context, models.Deployable)
             query = add_identity_filter(query, uuid)
@@ -275,7 +206,7 @@ class Connection(api.Connection):
 
     def deployable_get_by_filters_with_attributes(self, context,
                                                   filters):
-        raise NotImplementedError() # HACK
+        raise NotImplementedError() # TODO
 
         exact_match_filter_names = ['uuid', 'name',
                                     'parent_uuid', 'root_uuid',
@@ -315,7 +246,7 @@ class Connection(api.Connection):
         the sort_key. See deployable_get_by_filters_sort for
         more information.
         """
-        raise NotImplementedError() # HACK
+        raise NotImplementedError() # TODO
         return self.deployable_get_by_filters_sort(context, filters,
                                                    limit=limit, marker=marker,
                                                    join_columns=join_columns,
@@ -413,7 +344,7 @@ class Connection(api.Connection):
         keys. Deleted deployables will be returned by default, unless
         there's a filter that says otherwise.
         """
-        raise NotImplementedError() # HACK
+        raise NotImplementedError() # TODO
 
         if limit == 0:
             return []
@@ -439,7 +370,7 @@ class Connection(api.Connection):
                                sort_key, sort_dir, query_prefix)
 
     def attribute_create(self, context, values):
-        raise NotImplementedError() # HACK
+        raise NotImplementedError() # TODO
         if not values.get('uuid'):
             values['uuid'] = uuidutils.generate_uuid()
         if values.get('id'):
@@ -457,7 +388,7 @@ class Connection(api.Connection):
             return attribute
 
     def attribute_get(self, context, uuid):
-        raise NotImplementedError() # HACK
+        raise NotImplementedError() # TODO
         query = model_query(
             context,
             models.Attribute).filter_by(uuid=uuid)
@@ -467,14 +398,14 @@ class Connection(api.Connection):
             raise exception.AttributeNotFound(uuid=uuid)
 
     def attribute_get_by_deployable_id(self, context, deployable_id):
-        raise NotImplementedError() # HACK
+        raise NotImplementedError() # TODO
         query = model_query(
             context,
             models.Attribute).filter_by(deployable_id=deployable_id)
         return query.all()
 
     def attribute_get_by_filter(self, context, filters):
-        raise NotImplementedError() # HACK
+        raise NotImplementedError() # TODO
         """Return attributes that matches the filters
         """
         query_prefix = model_query(context, models.Attribute)
@@ -502,7 +433,7 @@ class Connection(api.Connection):
         return query
 
     def attribute_update(self, context, uuid, key, value):
-        raise NotImplementedError() # HACK
+        raise NotImplementedError() # TODO
         return self._do_update_attribute(context, uuid, key, value)
 
     @oslo_db_api.retry_on_deadlock
@@ -520,7 +451,7 @@ class Connection(api.Connection):
         return ref
 
     def attribute_delete(self, context, uuid):
-        raise NotImplementedError() # HACK
+        raise NotImplementedError() # TODO
         with _session_for_write():
             query = model_query(context, models.Attribute)
             query = add_identity_filter(query, uuid)
@@ -601,14 +532,9 @@ class Connection(api.Connection):
                 # create quota usage in DB if there is no record of this type
                 # of resource
                 if resource not in usages:
-                    usages[resource] = self._quota_usage_create(project_id,
-                                                                resource,
-                                                                until_refresh
-                                                                or None,
-                                                                in_use=0,
-                                                                reserved=0,
-                                                                session=session
-                                                                )
+                    usages[resource] = self._quota_usage_create(
+                           project_id, resource, until_refresh or None,
+                           in_use=0, reserved=0, session=session)
                     refresh = True
                 elif usages[resource].in_use < 0:
                     # Negative in_use count indicates a desync, so try to
@@ -627,7 +553,7 @@ class Connection(api.Connection):
                 # refresh the usage
                 if refresh:
                     # Grab the sync routine
-                    updates = self._sync_acc_res(context, resource, project_id)
+                    updates= self._sync_acc_res(context, resource, project_id)
                     for res, in_use in updates.items():
                         # Make sure we have a destination for the usage!
                         if res not in usages:
@@ -668,8 +594,8 @@ class Connection(api.Connection):
                 usages[resource].reserved += delta
             session.flush()
         if unders:
-            LOG.warning("Change will make usage less than 0 for the following "
-                        "resources: %s", unders)
+            LOG.warning("Change will make usage less than 0 for the "
+                        "following resources: %s", unders)
         return reservations
 
     def _sync_acc_res(self, context, resource, project_id):
@@ -678,8 +604,9 @@ class Connection(api.Connection):
                                                             project_id)
         return {resource: res_in_use}
 
-    def _accelerator_data_get_for_project(self, context, resource, project_id):
+    def _accelerator_data_get_for_project(self, context, resource,project_id):
         """Return the number of resource which is being used by a project"""
+        raise NotImplementedError()
         query = model_query(context, models.Accelerator).\
             filter_by(project_id=project_id).filter_by(device_type=resource)
 
@@ -764,7 +691,7 @@ class Connection(api.Connection):
                 session.add(devprof)
                 session.flush()
             except db_exc.DBDuplicateEntry:
-                raise RuntimeError() # HACK use specific exception
+                raise RuntimeError() # TODO use specific exception
             return devprof
 
     def device_profile_get(self, context, name):
@@ -773,7 +700,7 @@ class Connection(api.Connection):
         try:
             return query.one()
         except NoResultFound:
-            raise RuntimeError() # HACK use specific exception
+            raise RuntimeError() # TODO use specific exception
 
     def device_profile_get_by_id(self, context, id):
         query = model_query(context,
@@ -791,7 +718,7 @@ class Connection(api.Connection):
         try:
             return self._do_update_device_profile(context, name, values)
         except db_exc.DBDuplicateEntry as e:
-            raise RuntimeError() # HACK use specific exception
+            raise RuntimeError() # TODO use specific exception
 
     @oslo_db_api.retry_on_deadlock
     def _do_update_device_profile(self, context, name, values):
@@ -801,7 +728,7 @@ class Connection(api.Connection):
             try:
                 ref = query.with_lockmode('update').one()
             except NoResultFound:
-                raise RuntimeError() # HACK use specific exception
+                raise RuntimeError() # TODO use specific exception
 
             ref.update(values)
         return ref
@@ -812,69 +739,68 @@ class Connection(api.Connection):
             query = add_identity_filter(query, name)
             count = query.delete()
             if count != 1:
-                raise RuntimeError() # HACK use specific exception
+                raise RuntimeError() # TODO use specific exception
 
-    def arq_create(self, context, values):
+    def extarq_create(self, context, values):
         if not values.get('uuid'):
             values['uuid'] = uuidutils.generate_uuid()
 
         if values.get('device_profile_id'):
-             pass # Already have the devprof id, so nothing to do
+            pass # Already have the devprof id, so nothing to do
         elif values.get('device_profile_name'):
-            MYLOG.warning("db arq_create: Querying devprof to get id.")
+            MYLOG.warning("db extarq_create: Querying devprof to get id.")
             devprof = self.device_profile_get(context,
                                   values['device_profile_name'])
             values['device_profile_id'] = devprof['id']
         else:
-            # HACK use specific exception
             raise RuntimeError('Device profile name/id required')
 
-        arq = models.ARQ()
-        arq.update(values)
+        extarq = models.ExtARQ()
+        extarq.update(values)
 
         with _session_for_write() as session:
             try:
-                session.add(arq)
+                session.add(extarq)
                 session.flush()
             except db_exc.DBDuplicateEntry:
-                raise RuntimeError() # HACK use specific exception
-            return arq
+                raise RuntimeError('Duplicate ExtARQ')
+            return extarq
 
-    def arq_get(self, context, uuid):
+    def extarq_get(self, context, uuid):
         query = model_query(context,
-                   models.ARQ).filter_by(uuid=uuid)
+                   models.ExtARQ).filter_by(uuid=uuid)
         try:
             return query.one()
         except NoResultFound:
-            raise RuntimeError('No ARQ found with UUID %s' % uuid)
+            raise RuntimeError('No ExtARQ found with UUID %s' % uuid)
 
-    def arq_list(self, context):
-        query = model_query(context, models.ARQ)
+    def extarq_list(self, context):
+        query = model_query(context, models.ExtARQ)
         return query.all()
 
-    def arq_update(self, context, name, values):
+    def extarq_update(self, context, uuid, values):
         try:
-            return self._do_update_arq(context, name, values)
+            return self._do_update_extarq(context, uuid, values)
         except db_exc.DBDuplicateEntry as e:
-            raise RuntimeError() # HACK use specific exception
+            raise RuntimeError() # TODO use specific exception
 
     @oslo_db_api.retry_on_deadlock
-    def _do_update_arq(self, context, name, values):
+    def _do_update_extarq(self, context, uuid, values):
         with _session_for_write():
-            query = model_query(context, models.ARQ)
-            query = add_identity_filter(query, name)
+            query = model_query(context, models.ExtARQ)
+            query = add_identity_filter(query, uuid)
             try:
                 ref = query.with_lockmode('update').one()
             except NoResultFound:
-                raise RuntimeError() # HACK use specific exception
+                raise RuntimeError() # TODO use specific exception
 
             ref.update(values)
         return ref
 
-    def arq_delete(self, context, name):
+    def extarq_delete(self, context, uuid):
         with _session_for_write():
-            query = model_query(context, models.ARQ)
-            query = add_identity_filter(query, name)
+            query = model_query(context, models.ExtARQ)
+            query = add_identity_filter(query, uuid)
             count = query.delete()
             if count != 1:
-                raise RuntimeError() # HACK use specific exception
+                raise RuntimeError() # TODO use specific exception

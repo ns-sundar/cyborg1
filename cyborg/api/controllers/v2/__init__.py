@@ -21,15 +21,13 @@ from wsme import types as wtypes
 
 from cyborg.api.controllers import base
 from cyborg.api.controllers import link
-from cyborg.api.controllers.v2 import accelerators
-from cyborg.api.controllers.v2 import deployables
 from cyborg.api.controllers.v2 import device_profiles
 from cyborg.api.controllers.v2 import arqs
 from cyborg.api.controllers.v2 import arq_bindings
 from cyborg.api import expose
 
 
-class V1(base.APIBase):
+class V2(base.APIBase):
     """The representation of the version 1 of the API."""
 
     id = wtypes.text
@@ -40,7 +38,7 @@ class V1(base.APIBase):
 
     @staticmethod
     def convert():
-        v2 = V1()
+        v2 = V2()
         v2.id = 'v2'
         v2.accelerator = [
             link.Link.make_link('self', pecan.request.public_url,
@@ -52,17 +50,15 @@ class V1(base.APIBase):
 
 
 class Controller(rest.RestController):
-    """Version 1 API controller root"""
+    """Version 2 API controller root"""
 
-    accelerators = accelerators.AcceleratorsController()
-    deployables = deployables.DeployablesController()
     device_profiles = device_profiles.DeviceProfilesController()
     arqs = arqs.ARQsController()
     arq_bindings = arq_bindings.ARQBindingsController()
 
-    @expose.expose(V1)
+    @expose.expose(V2)
     def get(self):
-        return V1.convert()
+        return V2.convert()
 
 
 __all__ = ('Controller',)

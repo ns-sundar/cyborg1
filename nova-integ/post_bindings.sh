@@ -1,5 +1,20 @@
 #!/bin/bash
 
+create_devprof() {
+   cat <<EOF > /tmp/devprof.txt
+   { "name": "mydevprof.2",
+     "json": "{ }"
+   }
+EOF
+   body=`cat /tmp/devprof.txt`
+
+   echo "body:" "${body}"
+   curl -H "Content-Type: application/json" -X POST -d "$body" \
+        http://192.168.122.4/accelerator/v2/device_profiles
+   /bin/rm -f /tmp/devprof.txt
+}
+
+
 create_arqs() {
    curl -H "Content-Type: application/json" -X POST -d '{"device_profile_name": "devprof.1"}' http://192.168.122.4/accelerator/v2/arqs
 }
@@ -22,5 +37,6 @@ EOF
    /bin/rm -f /tmp/arq_binding_json.txt
 }
 
-create_arqs
-post_bindings
+create_devprof
+# create_arqs
+# post_bindings
